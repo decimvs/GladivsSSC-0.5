@@ -19,9 +19,12 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -44,6 +47,12 @@ public class mainController implements Initializable {
     private Slider slStrokeWidth, slDashSpace, slDashWidth;
     @FXML
     private TextField txtStrokeWidth, txtDashSpace, txtDashWidth, txtText;
+    @FXML
+    private ToggleButton btnTextUnderline, btnItalicText, btnBoldText;
+    @FXML
+    private ContextMenu cmShapeOptions;
+    @FXML
+    private MenuItem cmiBringToFront, cmiSendToBack, cmiBringForward, cmiSendBackward, cmiDeleteShape;
     
     //Counter for autonaming files saved
     private int filesSaveCounter = 1;
@@ -187,4 +196,13 @@ public class mainController implements Initializable {
     public TextField getTextFieldText() { return txtText; }
     public ComboBox getComboBoxFontSize() { return cbxFontSize; }
     public ComboBox getComboBoxFontChooser() { return cbxFontChooser; }
+    public ToggleButton getButtonTextUnderline() { return btnTextUnderline; }
+    public ToggleButton getButtonBoldText() { return btnBoldText; }
+    public ToggleButton getButtonItalicText() { return btnItalicText; }
+    public ContextMenu getContextMenuShapeOptions() { return cmShapeOptions; }
+    public MenuItem getMenuItemBringToFront() { return cmiBringToFront; }
+    public MenuItem getMenuItemSendToBack() { return cmiSendToBack; }
+    public MenuItem getMenuItemBringForward() { return cmiBringForward; }
+    public MenuItem getMenuItemSendBackward() { return cmiSendBackward; }
+    public MenuItem getMenuItemDeleteShape() { return cmiDeleteShape; }
 }

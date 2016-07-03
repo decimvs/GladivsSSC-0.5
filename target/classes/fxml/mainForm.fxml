@@ -16,7 +16,19 @@
          <center>
             <AnchorPane fx:id="contentPane" minHeight="-Infinity" minWidth="-Infinity" prefHeight="530.0" prefWidth="600.0">
                <children>
-                  <TabPane fx:id="tabPane" prefHeight="530.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                  <TabPane fx:id="tabPane" prefHeight="530.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                     <contextMenu>
+                        <ContextMenu fx:id="cmShapeOptions">
+                          <items>
+                            <MenuItem fx:id="cmiBringToFront" mnemonicParsing="false" text="Bring to front" />
+                              <MenuItem fx:id="cmiSendToBack" mnemonicParsing="false" text="Send to back" />
+                              <MenuItem fx:id="cmiBringForward" mnemonicParsing="false" text="Bring forward" />
+                              <MenuItem fx:id="cmiSendBackward" mnemonicParsing="false" text="Send backward" />
+                              <SeparatorMenuItem mnemonicParsing="false" />
+                              <MenuItem fx:id="cmiDeleteShape" mnemonicParsing="false" text="Delete" />
+                          </items>
+                        </ContextMenu>
+                     </contextMenu></TabPane>
                </children>
             </AnchorPane>
          </center>
@@ -112,12 +124,13 @@
                                        <columnConstraints>
                                           <ColumnConstraints hgrow="SOMETIMES" />
                                           <ColumnConstraints hgrow="SOMETIMES" />
+                                          <ColumnConstraints />
                                        </columnConstraints>
                                        <rowConstraints>
                                           <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
                                        </rowConstraints>
                                        <children>
-                                          <ComboBox fx:id="cbxFontSize" editable="true" minWidth="90.0" prefWidth="90.0" value="11" GridPane.halignment="LEFT">
+                                          <ComboBox fx:id="cbxFontSize" editable="true" minWidth="90.0" prefWidth="90.0" value="36" GridPane.halignment="LEFT">
                                               <items>
                                                   <FXCollections fx:factory="observableArrayList">
                                                       <String fx:value="8" />
@@ -133,7 +146,6 @@
                                                       <String fx:value="24" />
                                                       <String fx:value="26" />
                                                       <String fx:value="28" />
-                                                      <String fx:value="26" />
                                                       <String fx:value="36" />
                                                       <String fx:value="48" />
                                                       <String fx:value="72" />
@@ -142,7 +154,7 @@
                                           </ComboBox>
                                           <HBox alignment="CENTER_RIGHT" maxHeight="36.0" prefHeight="36.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.valignment="CENTER">
                                              <children>
-                                                <Button alignment="CENTER" maxHeight="25.0" maxWidth="25.0" minHeight="25.0" minWidth="25.0" mnemonicParsing="false">
+                                                <ToggleButton fx:id="btnBoldText" maxHeight="25.0" maxWidth="25.0" minHeight="25.0" minWidth="25.0" mnemonicParsing="false">
                                                    <graphic>
                                                       <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
                                                          <image>
@@ -150,8 +162,8 @@
                                                          </image>
                                                       </ImageView>
                                                    </graphic>
-                                                </Button>
-                                                <Button alignment="CENTER" maxHeight="25.0" maxWidth="25.0" minHeight="25.0" minWidth="25.0" mnemonicParsing="false">
+                                                </ToggleButton>
+                                                <ToggleButton fx:id="btnItalicText" maxHeight="25.0" maxWidth="25.0" minHeight="25.0" minWidth="25.0" mnemonicParsing="false">
                                                    <graphic>
                                                       <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
                                                          <image>
@@ -159,11 +171,8 @@
                                                          </image>
                                                       </ImageView>
                                                    </graphic>
-                                                   <HBox.margin>
-                                                      <Insets left="3.0" />
-                                                   </HBox.margin>
-                                                </Button>
-                                                <Button alignment="CENTER" maxHeight="25.0" maxWidth="25.0" minHeight="25.0" minWidth="25.0" mnemonicParsing="false">
+                                                </ToggleButton>
+                                                <ToggleButton fx:id="btnTextUnderline" maxHeight="25.0" maxWidth="25.0" minHeight="25.0" minWidth="25.0" mnemonicParsing="false">
                                                    <graphic>
                                                       <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
                                                          <image>
@@ -171,10 +180,7 @@
                                                          </image>
                                                       </ImageView>
                                                    </graphic>
-                                                   <HBox.margin>
-                                                      <Insets left="3.0" />
-                                                   </HBox.margin>
-                                                </Button>
+                                                </ToggleButton>
                                              </children>
                                           </HBox>
                                        </children>

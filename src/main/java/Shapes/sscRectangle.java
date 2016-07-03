@@ -6,15 +6,18 @@
 package Shapes;
 
 import Controllers.mainController;
+import java.util.List;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
@@ -119,6 +122,73 @@ public class sscRectangle implements sscShape {
         maincontroller.getBorderColorPicker().addEventFilter(ActionEvent.ACTION, onStrokeColorPickerActionEvent);
         maincontroller.getSliderDashSpace().valueProperty().addListener(onSlideDashPropertiesValueChange);
         maincontroller.getSliderDashWidth().valueProperty().addListener(onSlideDashPropertiesValueChange);
+        maincontroller.getMenuItemDeleteShape().addEventHandler(ActionEvent.ACTION, onMenuItemDeleteShapeActionEvent);
+        maincontroller.getMenuItemSendBackward().addEventHandler(ActionEvent.ACTION, onMenuItemSendBackwardtActionEvent);
+        
+        //Set the contextual menu for this shape
+        
+    }
+    
+    EventHandler<ActionEvent> onMenuItemDeleteShapeActionEvent = new EventHandler<ActionEvent>() {
+        @Override
+        public void handle(ActionEvent event) {
+            if(isSelected)
+            {
+///TODO CONFIRMATION PROMPT                
+                container.getChildren().removeAll(selection, shape);
+            }
+        }
+    };
+    
+    EventHandler<ActionEvent> onMenuItemSendBackwardtActionEvent = new EventHandler<ActionEvent>() {
+        @Override
+        public void handle(ActionEvent event) {
+            if(isSelected)
+            {
+                
+            }
+        }
+    };
+    
+    EventHandler<ActionEvent> onMenuItemBringForwardActionEvent = new EventHandler<ActionEvent>() {
+        @Override
+        public void handle(ActionEvent event) {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+    };
+    
+    EventHandler<ActionEvent> onMenuItemSendToBackActionEvent = new EventHandler<ActionEvent>() {
+        @Override
+        public void handle(ActionEvent event) {
+            
+        }
+    };
+    
+    EventHandler<ActionEvent> onMenuItemBringToFrontActionEvent = new EventHandler<ActionEvent>() {
+        @Override
+        public void handle(ActionEvent event) {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+    };
+    
+    /**
+     * Performs the operations for arrange this shape.
+     */
+    private void CommonShapeArrangeOptions(String op)
+    {
+        switch(op)
+        {
+            case "front":
+                break;
+            case "back":
+                break;
+            case "forward":
+                break;
+            case "backward":
+                break;
+            default:
+                return;
+        }
     }
     
     EventHandler<ActionEvent> onStrokeColorPickerActionEvent = new EventHandler<ActionEvent>() {
@@ -251,26 +321,28 @@ public class sscRectangle implements sscShape {
     @Override
     public void SelectionOnMousePressedEventHandler(MouseEvent ev) {
          //Enregistrament dels valors de la posició de l'objecte prèvia a l'arrossegament
-
-        origSceneX = ev.getSceneX();
-        origSceneY = ev.getSceneY();
-        origTranslateX = shape.getTranslateX();
-        origTranslateY = shape.getTranslateY();
-
-        //Establir les dimensions originals de l'objecte
-        SaveShapeDimensions(selection);
-
-        //Comprobació si click en la zona de edició o en el centre de la figura
-        if(SelectionArea(shape, ev))
+        if(ev.getButton() == MouseButton.PRIMARY)
         {
-            isDragEditting = true;
+            origSceneX = ev.getSceneX();
+            origSceneY = ev.getSceneY();
+            origTranslateX = shape.getTranslateX();
+            origTranslateY = shape.getTranslateY();
+
+            //Establir les dimensions originals de l'objecte
+            SaveShapeDimensions(selection);
+
+            //Comprobació si click en la zona de edició o en el centre de la figura
+            if(SelectionArea(shape, ev))
+            {
+                isDragEditting = true;
+            }
+            else
+            {
+                isTranslating = true;
+                selection.setCursor(Cursor.CLOSED_HAND);
+            }
         }
-        else
-        {
-            isTranslating = true;
-            selection.setCursor(Cursor.CLOSED_HAND);
-        }
- }
+    }
 
     @Override
     public void SelectionOnMouseDraggedEventHandler(MouseEvent ev) {
@@ -301,22 +373,24 @@ public class sscRectangle implements sscShape {
 
     @Override
     public void SelectionOnMouseButtonReleasedEventHandler(MouseEvent ev) {
-        
-        if(!wasDragged && !isSelected || wasDragged && !isSelected || wasDragged && isSelected)
+        if(ev.getButton() == MouseButton.PRIMARY)
         {
-            isSelected = true;
-            updateShapePropertiesOnPropertiesWindow();
+            if(!wasDragged && !isSelected || wasDragged && !isSelected || wasDragged && isSelected)
+            {
+                isSelected = true;
+                updateShapePropertiesOnPropertiesWindow();
+            }
+            else if(!wasDragged && isSelected)
+            {
+                isSelected = false;
+            }
+
+            //Cambiar el valor a false per a desbloquejar el mode edició en el cas de estar activat.
+            isDragEditting = false;
+            isTranslating = false;
+            selectedEditionEdge = -1;
+            wasDragged = false;
         }
-        else if(!wasDragged && isSelected)
-        {
-            isSelected = false;
-        }
-        
-        //Cambiar el valor a false per a desbloquejar el mode edició en el cas de estar activat.
-        isDragEditting = false;
-        isTranslating = false;
-        selectedEditionEdge = -1;
-        wasDragged = false;
     }
 
     @Override

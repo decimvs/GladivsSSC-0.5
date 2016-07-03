@@ -6,14 +6,23 @@
 package Shapes;
 
 import Controllers.mainController;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Slider;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Shape;
+import javafx.scene.shape.StrokeType;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontPosture;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 
 /**
@@ -33,6 +42,8 @@ public class sscText  implements sscShape {
     private boolean isMouseOver = false;
     private boolean isSelected = false;
     private boolean wasDragged = false;
+    
+    private int indexStrokeType = 0;
     
     public sscText (Pane container, mainController mc) 
     {
@@ -58,6 +69,30 @@ public class sscText  implements sscShape {
         textSelection.setX(80);
         textSelection.setY(80);
         
+        textShape.setStrokeType(StrokeType.CENTERED);
+        textSelection.setStrokeType(StrokeType.OUTSIDE);
+        
+        switch(maincontroller.getStrokeTypeComboBox().getSelectionModel().getSelectedIndex())
+        {
+            case 0:     //Border none
+                 textShape.setStrokeWidth(0);
+                 textShape.setStroke(Color.BLACK);
+                 indexStrokeType = 0;
+                break;
+            case 1:     //Border lineal
+                textShape.setStrokeWidth(maincontroller.getSliderStrokeWidth().getValue());
+                textShape.setStroke(maincontroller.getBorderColorPicker().getValue());
+                indexStrokeType = 1;
+                break;
+            case 2:     //Border dashed
+                textShape.getStrokeDashArray().clear();
+                textShape.getStrokeDashArray().addAll(maincontroller.getSliderDashWidth().getValue(), maincontroller.getSliderDashSpace().getValue());
+                textShape.setStrokeWidth(maincontroller.getSliderStrokeWidth().getValue());
+                textShape.setStroke(maincontroller.getBorderColorPicker().getValue());
+                indexStrokeType = 2;
+                break;
+        }
+        
         //Assigning event handlers
         textSelection.setOnMousePressed(this::SelectionOnMousePressedEventHandler);
         textSelection.setOnMouseDragged(this::SelectionOnMouseDraggedEventHandler);
@@ -69,12 +104,149 @@ public class sscText  implements sscShape {
         maincontroller.getComboBoxFontChooser().addEventFilter(ActionEvent.ACTION, onChangeFontFamilyOrSize);
         myContainer.addEventFilter(MouseEvent.MOUSE_PRESSED, onPaneMousePressedEvent);
         maincontroller.getFillColorPicker().addEventFilter(ActionEvent.ACTION, onFillColorPickerActionEvent);
+        maincontroller.getBorderColorPicker().addEventFilter(ActionEvent.ACTION, onStrokeColorPickerActionEvent);
+        maincontroller.getStrokeTypeComboBox().addEventFilter(ActionEvent.ACTION, onStrokeTypeDDMChanged);
+        maincontroller.getSliderStrokeWidth().valueProperty().addListener(onSlideStrokeWidthValueChange);
+        maincontroller.getSliderDashSpace().valueProperty().addListener(onSlideDashPropertiesValueChange);
+        maincontroller.getSliderDashWidth().valueProperty().addListener(onSlideDashPropertiesValueChange);
+        maincontroller.getButtonTextUnderline().addEventFilter(ActionEvent.ACTION, onButtonTextUnderlineActionEvent);
+        maincontroller.getButtonItalicText().addEventFilter(ActionEvent.ACTION, onBoldItalicButtonsActionEvent);
+        maincontroller.getButtonBoldText().addEventFilter(ActionEvent.ACTION, onBoldItalicButtonsActionEvent);
         
         container.getChildren().add(textShape);
         container.getChildren().add(textSelection);
     }
     
+    EventHandler<ActionEvent> onBoldItalicButtonsActionEvent = new EventHandler<ActionEvent>() {
+        @Override
+        public void handle(ActionEvent event) {
+            if(isSelected)
+            {
+                ToggleButton btnbold = maincontroller.getButtonBoldText();
+                ToggleButton btnitalic = maincontroller.getButtonItalicText();
+                
+                if(btnbold.isSelected() && btnitalic.isSelected())
+                {
+                    textShape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.BOLD, FontPosture.ITALIC, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
+                    textSelection.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.BOLD, FontPosture.ITALIC, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
+                }
+                else if (btnbold.isSelected() && !btnitalic.isSelected())
+                {
+                    textShape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.BOLD, FontPosture.REGULAR, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
+                    textSelection.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.BOLD, FontPosture.REGULAR, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
+                }
+                else if (!btnbold.isSelected() && btnitalic.isSelected())
+                {
+                    textShape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.NORMAL, FontPosture.ITALIC, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
+                    textSelection.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.NORMAL, FontPosture.ITALIC, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
+                }
+                else
+                {
+                    textShape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.NORMAL, FontPosture.REGULAR, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
+                    textSelection.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.NORMAL, FontPosture.REGULAR, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
+                }
+                
+                //Request focus in Pane container to unfocus this control.
+                myContainer.requestFocus();
+            }
+        }
+    };
     
+    EventHandler<ActionEvent> onButtonTextUnderlineActionEvent = new EventHandler<ActionEvent>() {
+        @Override
+        public void handle(ActionEvent event) {
+            if(isSelected)
+            {
+                if(textShape.isUnderline())
+                {
+                    textShape.setUnderline(false);
+                    textSelection.setUnderline(false);
+                    maincontroller.getButtonTextUnderline().setSelected(false);
+                    myContainer.requestFocus();
+                }
+                else
+                {
+                    textShape.setUnderline(true);
+                    textSelection.setUnderline(true);
+                    maincontroller.getButtonTextUnderline().setSelected(true);
+                    myContainer.requestFocus();
+                }
+            }
+        }
+    };
+    
+    ChangeListener<Number> onSlideStrokeWidthValueChange = new ChangeListener<Number>() {
+        @Override
+        public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+            if(isSelected)
+            {
+                //If border type is selected to None, here it hasn't anything to do
+                if(maincontroller.getStrokeTypeComboBox().getSelectionModel().getSelectedIndex() > 0)
+                {
+                    Slider slider = maincontroller.getSliderStrokeWidth();
+                    Double width = textShape.getStrokeWidth();
+
+                    if(slider.getValue() != width)
+                    {
+                        textShape.setStrokeWidth(slider.getValue());
+                    }
+                }
+            }
+        }
+    };
+    
+    ChangeListener<Number> onSlideDashPropertiesValueChange = new ChangeListener<Number>() {
+        @Override
+        public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+            if(isSelected)
+            {
+                Slider sliderSpace = maincontroller.getSliderDashSpace();
+                Slider sliderWidth = maincontroller.getSliderDashWidth();
+                
+                textShape.getStrokeDashArray().clear();
+                textShape.getStrokeDashArray().addAll(sliderWidth.getValue(), sliderSpace.getValue());
+            }
+        }
+    };
+    
+    EventHandler<ActionEvent> onStrokeTypeDDMChanged = new EventHandler<ActionEvent>() {
+        @Override
+        public void handle(ActionEvent event) {
+            if(isSelected)
+            {
+                ComboBox cb = maincontroller.getStrokeTypeComboBox();
+
+                switch(cb.getSelectionModel().getSelectedIndex())
+                {
+                    case 0:     //none
+                        textShape.setStrokeWidth(0);
+                        indexStrokeType = 0;
+                        break;
+                    case 1:     //lineal
+                        textShape.getStrokeDashArray().clear();
+                        textShape.setStrokeWidth(maincontroller.getSliderStrokeWidth().getValue());
+                        indexStrokeType = 1;
+                        break;
+                    case 2:     //punts
+                        textShape.getStrokeDashArray().clear();
+                        textShape.getStrokeDashArray().addAll(maincontroller.getSliderDashWidth().getValue(), maincontroller.getSliderDashSpace().getValue());
+                        textShape.setStrokeWidth(maincontroller.getSliderStrokeWidth().getValue());
+                        indexStrokeType = 2;
+                        break;
+                }
+            }
+        }
+    };
+    
+    EventHandler<ActionEvent> onStrokeColorPickerActionEvent = new EventHandler<ActionEvent>() {
+        @Override
+        public void handle(ActionEvent ev) {
+            if(isSelected)
+            {
+                textShape.setStroke(maincontroller.getBorderColorPicker().getValue());
+            }
+        }
+    };
     
     EventHandler<ActionEvent> onFillColorPickerActionEvent = new EventHandler<ActionEvent>() {
         @Override
@@ -103,8 +275,29 @@ public class sscText  implements sscShape {
         public void handle(ActionEvent ev) {
             if(isSelected)
             {
-                textShape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
-                textSelection.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
+                ToggleButton btnbold = maincontroller.getButtonBoldText();
+                ToggleButton btnitalic = maincontroller.getButtonItalicText();
+                
+                if(btnbold.isSelected() && btnitalic.isSelected())
+                {
+                    textShape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.BOLD, FontPosture.ITALIC, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
+                    textSelection.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.BOLD, FontPosture.ITALIC, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
+                }
+                else if (btnbold.isSelected() && !btnitalic.isSelected())
+                {
+                    textShape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.BOLD, FontPosture.REGULAR, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
+                    textSelection.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.BOLD, FontPosture.REGULAR, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
+                }
+                else if (!btnbold.isSelected() && btnitalic.isSelected())
+                {
+                    textShape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.NORMAL, FontPosture.ITALIC, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
+                    textSelection.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.NORMAL, FontPosture.ITALIC, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
+                }
+                else
+                {
+                    textShape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.NORMAL, FontPosture.REGULAR, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
+                    textSelection.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.NORMAL, FontPosture.REGULAR, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
+                }
             }
         }
         
@@ -131,12 +324,15 @@ public class sscText  implements sscShape {
     @Override
     public void SelectionOnMousePressedEventHandler(MouseEvent ev) {
     
-        origSceneX = ev.getSceneX();
-        origSceneY = ev.getSceneY();
-        origTranslateX = textShape.getTranslateX();
-        origTranslateY = textShape.getTranslateY();
-        
-        wasDragged = false;
+        if(ev.getButton() == MouseButton.PRIMARY)
+        {
+            origSceneX = ev.getSceneX();
+            origSceneY = ev.getSceneY();
+            origTranslateX = textShape.getTranslateX();
+            origTranslateY = textShape.getTranslateY();
+
+            wasDragged = false;
+        }
     }
 
     @Override
@@ -159,18 +355,21 @@ public class sscText  implements sscShape {
 
     @Override
     public void SelectionOnMouseButtonReleasedEventHandler(MouseEvent ev) {
-        if(isSelected && !wasDragged)
+        if(ev.getButton() == MouseButton.PRIMARY)
         {
-            isSelected = false;
-        }
-        else
-        {
-            isSelected = true;
-            
-            maincontroller.getTextFieldText().setText(textShape.getText());
-            maincontroller.getComboBoxFontChooser().getSelectionModel().select(textShape.getFont().getFamily());
-            maincontroller.getComboBoxFontSize().setValue(String.valueOf(new Double(textShape.getFont().getSize()).intValue()));
-            maincontroller.getFillColorPicker().setValue((Color) textShape.getFill());
+            if(isSelected && !wasDragged)
+            {
+                isSelected = false;
+            }
+            else
+            {
+                isSelected = true;
+
+                maincontroller.getTextFieldText().setText(textShape.getText());
+                maincontroller.getComboBoxFontChooser().getSelectionModel().select(textShape.getFont().getFamily());
+                maincontroller.getComboBoxFontSize().setValue(String.valueOf(new Double(textShape.getFont().getSize()).intValue()));
+                maincontroller.getFillColorPicker().setValue((Color) textShape.getFill());
+            }
         }
     }
 

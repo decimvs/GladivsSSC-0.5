@@ -15,6 +15,7 @@ import javafx.scene.control.ColorPicker;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
@@ -252,27 +253,31 @@ public class sscEllipse implements sscShape {
     
     @Override
     public void SelectionOnMousePressedEventHandler(MouseEvent ev) {
-         //Enregistrament dels valors de la posició de l'objecte prèvia a l'arrossegament
-
-        origSceneX = ev.getSceneX();
-        origSceneY = ev.getSceneY();
-        origTranslateX = selection.getTranslateX();
-        origTranslateY = selection.getTranslateY();
-
-        //Establir les dimensions originals de l'objecte
-        SaveShapeDimensions(selection);
-
-        //Comprobació si click en la zona de edició o en el centre de la figura
-        if(SelectionArea(shape, ev))
+        
+        if(ev.getButton() == MouseButton.PRIMARY)
         {
-            isDragEditting = true;
+            //Enregistrament dels valors de la posició de l'objecte prèvia a l'arrossegament
+
+           origSceneX = ev.getSceneX();
+           origSceneY = ev.getSceneY();
+           origTranslateX = selection.getTranslateX();
+           origTranslateY = selection.getTranslateY();
+
+           //Establir les dimensions originals de l'objecte
+           SaveShapeDimensions(selection);
+
+           //Comprobació si click en la zona de edició o en el centre de la figura
+           if(SelectionArea(shape, ev))
+           {
+               isDragEditting = true;
+           }
+           else
+           {
+               isTranslating = true;
+               selection.setCursor(Cursor.CLOSED_HAND);
+           }
         }
-        else
-        {
-            isTranslating = true;
-            selection.setCursor(Cursor.CLOSED_HAND);
-        }
- }
+    }
 
     @Override
     public void SelectionOnMouseDraggedEventHandler(MouseEvent ev) {
@@ -303,22 +308,24 @@ public class sscEllipse implements sscShape {
 
     @Override
     public void SelectionOnMouseButtonReleasedEventHandler(MouseEvent ev) {
-        
-        if(!wasDragged && !isSelected || wasDragged && !isSelected || wasDragged && isSelected)
+        if(ev.getButton() == MouseButton.PRIMARY)
         {
-            isSelected = true;
-            updateShapePropertiesOnPropertiesWindow();
+            if(!wasDragged && !isSelected || wasDragged && !isSelected || wasDragged && isSelected)
+            {
+                isSelected = true;
+                updateShapePropertiesOnPropertiesWindow();
+            }
+            else if(!wasDragged && isSelected)
+            {
+                isSelected = false;
+            }
+
+            //Cambiar el valor a false per a desbloquejar el mode edició en el cas de estar activat.
+            isDragEditting = false;
+            isTranslating = false;
+            selectedEditionEdge = -1;
+            wasDragged = false;
         }
-        else if(!wasDragged && isSelected)
-        {
-            isSelected = false;
-        }
-        
-        //Cambiar el valor a false per a desbloquejar el mode edició en el cas de estar activat.
-        isDragEditting = false;
-        isTranslating = false;
-        selectedEditionEdge = -1;
-        wasDragged = false;
     }
 
     @Override

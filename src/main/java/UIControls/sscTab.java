@@ -128,28 +128,19 @@ public class sscTab extends Tab{
      * Get the tab containing all nodes inside. It is the root node of this component.
      * @return 
      */
-    public Tab getTab()
-    {
-        return tab;
-    }
+    public Tab getTab(){ return tab; }
     
     /**
      * Get the Scroll Pane that contains all the nodes inside. It is included inside the tab.
      * @return 
      */
-    public ScrollPane getScrollPane()
-    {
-        return scrPane;
-    }
+    public ScrollPane getScrollPane(){ return scrPane; }
     
     /**
      * Get an array list containin all the shapes drawed in the pane
      * @return 
      */
-    public ArrayList<sscShape> getShapesDrawed()
-    {
-        return shapesDrawed;
-    }
+    public ArrayList<sscShape> getShapesDrawed(){ return shapesDrawed; }
     
     /**
      * Get a list that contains all the selected shapes
@@ -176,7 +167,7 @@ public class sscTab extends Tab{
     public void paneOnMouseDragged(MouseEvent ev)
     {
         //double width = ev.getX() - origX;
-        double height = ev.getY() - origY;
+        //double height = ev.getY() - origY;
         
         //selectionArea.setWidth(width);
         //selectionArea.setHeight(height);
