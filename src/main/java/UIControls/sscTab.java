@@ -12,11 +12,13 @@ import javafx.scene.control.Tab;
 import Shapes.sscShape;
 import Shapes.sscText;
 import java.util.ArrayList;
+import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 
 /**
  *
@@ -81,7 +83,7 @@ public class sscTab extends Tab{
     
     public void CreateNewRectangle()
     {
-        sscRectangle rt = new sscRectangle(70, 70, this.getPane(), maincontroller, "Rectangle " + contadorFiguras.toString());
+        sscRectangle rt = new sscRectangle(70, 70, this, maincontroller, "Rectangle " + contadorFiguras.toString());
         
         contadorFiguras++;
         
@@ -90,7 +92,7 @@ public class sscTab extends Tab{
     
     public void CreateNewText()
     {
-        sscText tx = new sscText(this.pane, maincontroller);
+        sscText tx = new sscText(this, maincontroller);
         
         contadorFiguras++;
         
@@ -99,7 +101,7 @@ public class sscTab extends Tab{
     
     public void CreateNewEllipse()
     {
-        sscEllipse cr = new sscEllipse(70, 70, pane, maincontroller, "Test");
+        sscEllipse cr = new sscEllipse(70, 70, this, maincontroller, "Test");
         
         contadorFiguras++;
         
@@ -150,6 +152,117 @@ public class sscTab extends Tab{
     {
         return selectedShapes;
     }
+    
+    public void ModifyShapesOrderInPane(Shape shape, Shape selection, String op)
+    {
+        int childrensSize = pane.getChildren().size();
+        int shapeIndex = pane.getChildren().indexOf(shape);
+        int selectionIndex = pane.getChildren().indexOf(selection);
+        int newShapeIndex = 0;
+        int newSelectionIndex = 0;
+        
+        if(shapeIndex > 0 && selectionIndex > 1 && shapeIndex < (childrensSize - 1) && selectionIndex < childrensSize)
+        {
+            switch(op)
+            {
+                //Send backward
+                case "backward":
+                    newShapeIndex = shapeIndex - 2;
+                    newSelectionIndex = selectionIndex - 2;
+                    break;
+                //Bring forward
+                case "forward":
+                    newShapeIndex = shapeIndex + 2;
+                    newSelectionIndex = selectionIndex + 2;
+                    break;
+                //Bring to front
+                case "front":
+                    newShapeIndex = childrensSize - 2;
+                    newSelectionIndex = childrensSize - 1;
+                    break;
+                //Send to back
+                case "back":
+                    newShapeIndex = 1;
+                    newSelectionIndex = 2;
+                    break;
+                default:
+                    return;
+            }
+            
+            if(newShapeIndex > 0 && newSelectionIndex > 1 && newShapeIndex < (childrensSize - 1) && newSelectionIndex < childrensSize)
+            {
+                pane.getChildren().removeAll(shape, selection);
+                ArrayList<Node> newOrdered = new ArrayList<>();
+                
+                if(pane.getChildren().size() == (childrensSize - 2))
+                {
+                    //Copy node 0 that corresponds with the background image.
+                    newOrdered.add(pane.getChildren().get(0));
+                    int mod = 0;
+                    int counter = 1;
+                    
+                    for(int i = 1; i < childrensSize; i++)
+                    {
+                        mod = i % 2;
+                        
+                        if(mod != 0 && newShapeIndex == i)
+                        {
+                            newOrdered.add(shape);
+                        }
+                        else if(mod == 0 && newSelectionIndex == i)
+                        {
+                            newOrdered.add(selection);
+                        }
+                        else
+                        {
+                            if(counter < pane.getChildren().size())
+                            {
+                                newOrdered.add(pane.getChildren().get(counter));
+                            }
+                            
+                            counter++;
+                        }
+                    }
+                    
+                    if(newOrdered.size() == childrensSize)
+                    {
+                        if(newOrdered.indexOf(shape) == newShapeIndex && newOrdered.indexOf(selection) == newSelectionIndex)
+                        {
+                            pane.getChildren().setAll(newOrdered);
+                        }
+                        else
+                        {
+                            System.out.println("Error, shape and selection indexes don't match");
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        System.out.println("Error, size of arrays don't match");
+                        return;
+                    }
+                }
+                else
+                {
+                    System.out.println("Error removing elements from array");
+                    return;
+                }
+                
+            }
+            else
+            {
+                System.out.println("Out of bounds 2nd");
+                return;
+            }
+            
+        }
+        else
+        {
+            System.out.println("Out of bounds 1st");
+            return;
+        }
+    }
+    
     
     public void paneOnMouseButtonPressed(MouseEvent ev)
     {

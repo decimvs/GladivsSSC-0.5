@@ -6,6 +6,7 @@
 package Shapes;
 
 import Controllers.mainController;
+import UIControls.sscTab;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -35,6 +36,7 @@ public class sscText  implements sscShape {
     private mainController maincontroller;
     private Text textShape;
     private Text textSelection;
+    private sscTab rootTab;
     
     private double origSceneX, origSceneY;
     private double origTranslateX, origTranslateY;
@@ -45,10 +47,11 @@ public class sscText  implements sscShape {
     
     private int indexStrokeType = 0;
     
-    public sscText (Pane container, mainController mc) 
+    public sscText (sscTab tab, mainController mc) 
     {
-        myContainer = container;
+        myContainer = tab.getPane();
         maincontroller = mc;
+        rootTab = tab;
         
         Text tx = new Text();
         Text txs = new Text();
@@ -113,8 +116,8 @@ public class sscText  implements sscShape {
         maincontroller.getButtonItalicText().addEventFilter(ActionEvent.ACTION, onBoldItalicButtonsActionEvent);
         maincontroller.getButtonBoldText().addEventFilter(ActionEvent.ACTION, onBoldItalicButtonsActionEvent);
         
-        container.getChildren().add(textShape);
-        container.getChildren().add(textSelection);
+        myContainer.getChildren().add(textShape);
+        myContainer.getChildren().add(textSelection);
     }
     
     EventHandler<ActionEvent> onBoldItalicButtonsActionEvent = new EventHandler<ActionEvent>() {

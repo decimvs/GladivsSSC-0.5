@@ -6,13 +6,12 @@
 package Shapes;
 
 import Controllers.mainController;
-import java.util.List;
+import UIControls.sscTab;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Cursor;
-import javafx.scene.Node;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Slider;
@@ -35,6 +34,7 @@ public class sscRectangle implements sscShape {
     private Rectangle selection;   //Selecció
     private Pane container;         //Contenedor
     private mainController maincontroller; //Main Controller instance
+    private sscTab rootTab;          //Root of node tab. Contains the Pane container
     
     //Variables per a enregistrar les posicions de l'objecte i el ratolí quant es fa click
     private double origSceneX, origSceneY;
@@ -69,11 +69,12 @@ public class sscRectangle implements sscShape {
     
     private int selectedEditionEdge = -1;
     
-    public sscRectangle(double width, double  height, Pane container, mainController mc, String name)
+    public sscRectangle(double width, double  height, sscTab tab, mainController mc, String name)
     {
-        this.container = container;
+        container = tab.getPane();
         maincontroller = mc;
         myName = name;
+        rootTab = tab;
         
         //Capa de selecció
         DrawSelectionArea(width, height);
@@ -82,8 +83,8 @@ public class sscRectangle implements sscShape {
         shape = new Rectangle( 70, 70, width, height);
         
         //Afegir figura i capa de selecció dins del contenidor
-        this.container.getChildren().add(shape);
-        this.container.getChildren().add(selection);
+        container.getChildren().add(shape);
+        container.getChildren().add(selection);
         
         /**
          * Set initial atributes for the shape: border, fill color, border width and border color.
@@ -115,7 +116,7 @@ public class sscRectangle implements sscShape {
         /**
          * Adding all event handlers and filters.
          */
-        this.container.addEventFilter(MouseEvent.MOUSE_PRESSED, onPaneMouseButtonPressed);
+        container.addEventFilter(MouseEvent.MOUSE_PRESSED, onPaneMouseButtonPressed);
         maincontroller.getFillColorPicker().addEventFilter(ActionEvent.ACTION, onFillColorPickerActionEvent);
         maincontroller.getSliderStrokeWidth().valueProperty().addListener(onSlideStrokeWidthValueChange);
         maincontroller.getStrokeTypeComboBox().addEventFilter(ActionEvent.ACTION, onStrokeTypeDDMChanged);
@@ -124,6 +125,9 @@ public class sscRectangle implements sscShape {
         maincontroller.getSliderDashWidth().valueProperty().addListener(onSlideDashPropertiesValueChange);
         maincontroller.getMenuItemDeleteShape().addEventHandler(ActionEvent.ACTION, onMenuItemDeleteShapeActionEvent);
         maincontroller.getMenuItemSendBackward().addEventHandler(ActionEvent.ACTION, onMenuItemSendBackwardtActionEvent);
+        maincontroller.getMenuItemBringForward().addEventHandler(ActionEvent.ACTION, onMenuItemBringForwardActionEvent);
+        maincontroller.getMenuItemSendToBack().addEventHandler(ActionEvent.ACTION, onMenuItemSendToBackActionEvent);
+        maincontroller.getMenuItemBringToFront().addEventHandler(ActionEvent.ACTION, onMenuItemBringToFrontActionEvent);
         
         //Set the contextual menu for this shape
         
@@ -145,7 +149,7 @@ public class sscRectangle implements sscShape {
         public void handle(ActionEvent event) {
             if(isSelected)
             {
-                
+                rootTab.ModifyShapesOrderInPane(shape, selection, "backward");
             }
         }
     };
@@ -153,43 +157,32 @@ public class sscRectangle implements sscShape {
     EventHandler<ActionEvent> onMenuItemBringForwardActionEvent = new EventHandler<ActionEvent>() {
         @Override
         public void handle(ActionEvent event) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            if(isSelected)
+            {
+                rootTab.ModifyShapesOrderInPane(shape, selection, "forward");
+            }
         }
     };
     
     EventHandler<ActionEvent> onMenuItemSendToBackActionEvent = new EventHandler<ActionEvent>() {
         @Override
         public void handle(ActionEvent event) {
-            
+            if(isSelected)
+            {
+                rootTab.ModifyShapesOrderInPane(shape, selection, "back");
+            }
         }
     };
     
     EventHandler<ActionEvent> onMenuItemBringToFrontActionEvent = new EventHandler<ActionEvent>() {
         @Override
         public void handle(ActionEvent event) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            if(isSelected)
+            {
+                rootTab.ModifyShapesOrderInPane(shape, selection, "front");
+            }
         }
     };
-    
-    /**
-     * Performs the operations for arrange this shape.
-     */
-    private void CommonShapeArrangeOptions(String op)
-    {
-        switch(op)
-        {
-            case "front":
-                break;
-            case "back":
-                break;
-            case "forward":
-                break;
-            case "backward":
-                break;
-            default:
-                return;
-        }
-    }
     
     EventHandler<ActionEvent> onStrokeColorPickerActionEvent = new EventHandler<ActionEvent>() {
         @Override

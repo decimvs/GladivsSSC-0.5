@@ -6,6 +6,7 @@
 package Shapes;
 
 import Controllers.mainController;
+import UIControls.sscTab;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -34,6 +35,7 @@ public class sscEllipse implements sscShape {
     private Rectangle selection;   //Selecció
     private Pane container;         //Contenedor
     private mainController maincontroller; //Main Controller instance
+    private sscTab rootTab;         //Root of node tab. Contents Pane container
     
     //Variables per a enregistrar les posicions de l'objecte i el ratolí quant es fa click
     private double origSceneX, origSceneY;
@@ -68,11 +70,12 @@ public class sscEllipse implements sscShape {
     
     private int selectedEditionEdge = -1;
     
-    public sscEllipse(double width, double  height, Pane container, mainController mc, String name)
+    public sscEllipse(double width, double  height, sscTab tab, mainController mc, String name)
     {
-        this.container = container;
+        container = tab.getPane();
         maincontroller = mc;
         myName = name;
+        rootTab = tab;
         
         //Capa de selecció
         DrawSelectionArea(width, height);
