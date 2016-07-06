@@ -8,6 +8,7 @@ package Controllers;
 import ImageIO.SaveImage;
 import Images.Screenshot;
 import UIControls.sscTab;
+import java.io.File;
 import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -28,6 +29,8 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 
 /**
  *
@@ -171,16 +174,29 @@ public class mainController implements Initializable {
         {
             sscTab selTab = (sscTab) tabPane.getSelectionModel().getSelectedItem();
             
-            if(SaveImage.save(selTab, "UntitledImage-" + filesSaveCounter))
-            {
-                System.out.println("File saved sucessfully");
-            }
-            else
-            {
-                System.out.println("Error when saving the image");
-            }
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Choose image name and format");
+            fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+            fileChooser.getExtensionFilters().addAll(
+                    new FileChooser.ExtensionFilter("PNG", "*.png"),
+                    new FileChooser.ExtensionFilter("JPEG", "*.jpg"),
+                    new FileChooser.ExtensionFilter("GIF", "*.gif")
+            );
             
-            filesSaveCounter++;
+            File file = fileChooser.showSaveDialog(cmShapeOptions);
+            
+            if(file != null)
+            {
+                
+                if(SaveImage.save(selTab, file))
+                {
+                    System.out.println("File saved sucessfully");
+                }
+                else
+                {
+                    System.out.println("Error when saving the image");
+                }
+            }
         }
     }
     

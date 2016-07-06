@@ -6,14 +6,21 @@
 package ImageIO;
 
 import UIControls.sscTab;
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.DataBuffer;
+import java.awt.image.DataBufferInt;
+import java.awt.image.DirectColorModel;
+import java.awt.image.PixelGrabber;
+import java.awt.image.Raster;
+import java.awt.image.WritableRaster;
+import java.awt.Image;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.Pane;
 import javax.imageio.ImageIO;
@@ -24,48 +31,82 @@ import javax.imageio.ImageIO;
  */
 public class SaveImage {
     
-    public static boolean save(sscTab tab, String filename)
+    private static final int[] RGB_MASKS = {0xFF0000, 0xFF00, 0xFF};
+    private static final ColorModel RGB_OPAQUE = new DirectColorModel(32, RGB_MASKS[0], RGB_MASKS[1], RGB_MASKS[2]);
+    
+    public static boolean save(sscTab tab, File file)
     {
-        int indexImageView = -1;
+        //int indexImageView = -1;
         
         ScrollPane tabContent = (ScrollPane) tab.getContent();
 
         Pane paneContent = (Pane) tabContent.getContent();
 
-        for(int i = 0; paneContent.getChildren().size() > i; i++)
+        WritableImage wi = new WritableImage(((Double) paneContent.getWidth()).intValue(), ((Double) paneContent.getHeight()).intValue());
+
+        //Get a snapshot of the Pane and save it to a file
+        tab.getPane().snapshot(null, wi);
+
+        String extension = file.getName();
+        String format;
+
+        if(extension.length() > 0 && extension.lastIndexOf(".") > 0)
         {
-            if(paneContent.getChildren().get(i) instanceof ImageView)
+            String[] ext = extension.split("\\.");
+            int index = ext.length - 1;
+            format = ext[index];
+
+            if(format.equals("png") || format.equals("gif"))
             {
-                System.out.println("Trobat el ImageView en l'index " + i);
-                indexImageView = i;
+                return savePngGifFormats(format, file, wi);
             }
+            else if(format.equals("jpg"))
+            {
+                return saveJpgFormat(file, wi);
+            }                
         }
-        
-        if(indexImageView > -1 && paneContent.getChildren().get(indexImageView) != null)
+        else
         {
-            ImageView iv1 = (ImageView) paneContent.getChildren().get(indexImageView);
-                
-            Image img1 = iv1.getImage();
-
-            int niWidth = ((Double) img1.getWidth()).intValue();
-            int niHeight = ((Double) img1.getHeight()).intValue();
-
-            WritableImage wi = new WritableImage(niWidth, niHeight);
-            
-            //Get a snapshot of the Pane and save it to a file
-            tab.getPane().snapshot(null, wi);
-
-            File filePng = new File(filename + ".png");
-
-            try {
-                ImageIO.write(SwingFXUtils.fromFXImage(wi, null), "png", filePng);
-            } catch (IOException ex) {
-                Logger.getLogger(SaveImage.class.getName()).log(Level.SEVERE, null, ex);
-                System.out.println("Error when write image");
-                return false;
-            }
+            return false;
         }
         
-        return true;
+        return false;
+    }
+    
+    private static boolean savePngGifFormats(String format, File file, WritableImage wi)
+    {
+        try {
+            ImageIO.write(SwingFXUtils.fromFXImage(wi, null), format, file);
+            return true;
+        } catch (IOException ex) {
+            Logger.getLogger(SaveImage.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("Error when write image");
+            return false;
+        }
+    }
+    
+    private static boolean saveJpgFormat(File file, WritableImage wi)
+    {
+        java.awt.Image img = SwingFXUtils.fromFXImage(wi, null);
+        PixelGrabber pg = new PixelGrabber(img, 0, 0, -1, -1, true);
+        
+        try {
+            pg.grabPixels();
+            
+            int width = pg.getWidth(), height = pg.getHeight();
+
+            DataBuffer buffer = new DataBufferInt((int[]) pg.getPixels(), pg.getWidth() * pg.getHeight());
+            WritableRaster raster = Raster.createPackedRaster(buffer, width, height, width, RGB_MASKS, null);
+            BufferedImage bi = new BufferedImage(RGB_OPAQUE, raster, false, null);
+
+            ImageIO.write(bi, "jpg", file);
+            
+            return true;
+            
+        } catch (InterruptedException ex) {
+            return false;
+        } catch (IOException ex) {
+            return false;
+        }
     }
 }
