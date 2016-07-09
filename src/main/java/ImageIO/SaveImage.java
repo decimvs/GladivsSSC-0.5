@@ -87,7 +87,7 @@ public class SaveImage {
     
     private static boolean saveJpgFormat(File file, WritableImage wi)
     {
-        java.awt.Image img = SwingFXUtils.fromFXImage(wi, null);
+        Image img = SwingFXUtils.fromFXImage(wi, null);
         PixelGrabber pg = new PixelGrabber(img, 0, 0, -1, -1, true);
         
         try {

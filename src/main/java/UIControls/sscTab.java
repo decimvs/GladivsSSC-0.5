@@ -12,12 +12,15 @@ import javafx.scene.control.Tab;
 import Shapes.sscShape;
 import Shapes.sscText;
 import java.util.ArrayList;
+import javafx.event.ActionEvent;
+import javafx.event.Event;
+import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
 
 /**
@@ -51,9 +54,11 @@ public class sscTab extends Tab{
     
     private double origX, origY;
     
-    private Rectangle selectionArea;
-    
     private Integer contadorFiguras = 0;
+    
+    private Boolean modeSelection = false;
+    
+    private SelectionArea selectionArea;
     
     public sscTab(String name, mainController mc)
     {
@@ -72,6 +77,8 @@ public class sscTab extends Tab{
         
         iViewer = new ImageView();
         
+        selectionArea = null;
+        
         pane.getChildren().add(iViewer);
         scrPane.setContent(pane);
         tab.setContent(scrPane);
@@ -79,6 +86,33 @@ public class sscTab extends Tab{
         pane.setOnMousePressed(this::paneOnMouseButtonPressed);
         pane.setOnMouseDragged(this::paneOnMouseDragged);
         pane.setOnMouseReleased(this::paneOnMouseButtonReleased);
+        
+        maincontroller.getMenuItemPaste().addEventHandler(ActionEvent.ACTION, onContextMenuItemPasteActionEvent);
+        maincontroller.getContextMenuShapeOptions().setOnShowing(this::onContextMenuShowingEvent);
+    }
+    
+     public void onContextMenuShowingEvent(Event event) {
+        if(maincontroller.getImageWriterImageCopied() != null)
+        {
+            maincontroller.getMenuItemPaste().setDisable(false);
+        }
+    }
+    
+    EventHandler<ActionEvent> onContextMenuItemPasteActionEvent = new EventHandler<ActionEvent>() {
+        @Override
+        public void handle(ActionEvent event) {
+            if(maincontroller.getImageWriterImageCopied() != null)
+            {
+                iViewer.setImage(maincontroller.getImageWriterImageCopied());
+            }
+        }
+    };
+    
+    public void StartSelectionMode()
+    {
+        modeSelection = true;
+        
+        selectionArea = new SelectionArea(this, maincontroller);
     }
     
     public void CreateNewRectangle()
@@ -87,7 +121,7 @@ public class sscTab extends Tab{
         
         contadorFiguras++;
         
-        this.getShapesDrawed().add(rt);
+        shapesDrawed.add(rt);
     }
     
     public void CreateNewText()
@@ -96,7 +130,7 @@ public class sscTab extends Tab{
         
         contadorFiguras++;
         
-        getShapesDrawed().add(tx);
+        shapesDrawed.add(tx);
     }
     
     public void CreateNewEllipse()
@@ -105,53 +139,9 @@ public class sscTab extends Tab{
         
         contadorFiguras++;
         
-        getShapesDrawed().add(cr);
+        shapesDrawed.add(cr);
     }
     
-    /**
-     * Get the ImageView property that contains capture image
-     * @return 
-     */
-    public ImageView getImageView()
-    {
-        return iViewer;
-    }
-    
-    /**
-     * Get the Pane object that contains all drawed objects. It is included inside the ScrollPane.
-     * @return 
-     */
-    public Pane getPane ()
-    {
-        return pane;
-    }
-    
-    /**
-     * Get the tab containing all nodes inside. It is the root node of this component.
-     * @return 
-     */
-    public Tab getTab(){ return tab; }
-    
-    /**
-     * Get the Scroll Pane that contains all the nodes inside. It is included inside the tab.
-     * @return 
-     */
-    public ScrollPane getScrollPane(){ return scrPane; }
-    
-    /**
-     * Get an array list containin all the shapes drawed in the pane
-     * @return 
-     */
-    public ArrayList<sscShape> getShapesDrawed(){ return shapesDrawed; }
-    
-    /**
-     * Get a list that contains all the selected shapes
-     * @return 
-     */
-    public ArrayList<sscShape> getSelectedShapes()
-    {
-        return selectedShapes;
-    }
     
     public void ModifyShapesOrderInPane(Shape shape, Shape selection, String op)
     {
@@ -266,28 +256,88 @@ public class sscTab extends Tab{
     
     public void paneOnMouseButtonPressed(MouseEvent ev)
     {
-        //origX = ev.getX();
-        //origY = ev.getY();
-        
-        //selectionArea = new Rectangle(origX, origY, 0 , 0);
-        //selectionArea.setFill(new Color(0, 0 ,0, 0));
-        //selectionArea.setStroke(Color.BLACK);
-        //selectionArea.setStrokeWidth(2);
-        
-        //pane.getChildren().add(selectionArea);
+//        if(modeSelection)
+//        {
+//            origX = ev.getX();
+//            origY = ev.getY();
+//
+//            selectionArea = new Rectangle(origX, origY, 0 , 0);
+//            selectionArea.setFill(new Color(0, 0 ,0, 0));
+//            selectionArea.setStroke(Color.BLACK);
+//            selectionArea.setStrokeWidth(2);
+//
+//            pane.getChildren().add(selectionArea);
+//        }
     }
     
     public void paneOnMouseDragged(MouseEvent ev)
     {
-        //double width = ev.getX() - origX;
-        //double height = ev.getY() - origY;
-        
-        //selectionArea.setWidth(width);
-        //selectionArea.setHeight(height);
+//        if(modeSelection)
+//        {
+//            double width = ev.getX() - origX;
+//            double height = ev.getY() - origY;
+//
+//            selectionArea.setWidth(width);
+//            selectionArea.setHeight(height);
+//        }
     }
     
     public void paneOnMouseButtonReleased(MouseEvent ev)
     {
         //pane.getChildren().remove(selectionArea);
+        
+//        selectionArea.getStrokeDashArray().setAll(4d,4d);
     }
+    
+    /**
+     * Get the ImageView property that contains capture image
+     * @return 
+     */
+    public ImageView getImageView(){ return iViewer; }
+    
+    /**
+     * Get the Pane object that contains all drawed objects. It is included inside the ScrollPane.
+     * @return 
+     */
+    public Pane getPane (){ return pane; }
+    
+    /**
+     * Get the tab containing all nodes inside. It is the root node of this component.
+     * @return 
+     */
+    public Tab getTab(){ return tab; }
+    
+    /**
+     * Get the Scroll Pane that contains all the nodes inside. It is included inside the tab.
+     * @return 
+     */
+    public ScrollPane getScrollPane(){ return scrPane; }
+    
+    /**
+     * Get an array list containin all the shapes drawed in the pane
+     * @return 
+     */
+    public ArrayList<sscShape> getShapesDrawed(){ return shapesDrawed; }
+    
+    /**
+     * Get a list that contains all the selected shapes
+     * @return 
+     */
+    public ArrayList<sscShape> getSelectedShapes(){ return selectedShapes; }
+    public boolean isInSelectionMode(){ return modeSelection; }
+    
+    public void setSelectionMode(boolean sm){ 
+        modeSelection = sm; 
+        
+        if(!sm)
+        {
+            maincontroller.getButtonCropImage().setSelected(false);
+        }
+        else
+        {
+            maincontroller.getButtonCropImage().setSelected(true);
+        }
+    }
+    
+    public void setImageViewerImage(WritableImage wi){ if(wi != null){ iViewer.setImage(wi); }}
 }
