@@ -125,7 +125,63 @@ public class sscEllipse implements sscShape {
         maincontroller.getBorderColorPicker().addEventFilter(ActionEvent.ACTION, onStrokeColorPickerActionEvent);
         maincontroller.getSliderDashSpace().valueProperty().addListener(onSlideDashPropertiesValueChange);
         maincontroller.getSliderDashWidth().valueProperty().addListener(onSlideDashPropertiesValueChange);
+        maincontroller.getMenuItemDeleteShape().addEventHandler(ActionEvent.ACTION, onMenuItemDeleteShapeActionEvent);
+        maincontroller.getMenuItemSendBackward().addEventHandler(ActionEvent.ACTION, onMenuItemSendBackwardtActionEvent);
+        maincontroller.getMenuItemBringForward().addEventHandler(ActionEvent.ACTION, onMenuItemBringForwardActionEvent);
+        maincontroller.getMenuItemSendToBack().addEventHandler(ActionEvent.ACTION, onMenuItemSendToBackActionEvent);
+        maincontroller.getMenuItemBringToFront().addEventHandler(ActionEvent.ACTION, onMenuItemBringToFrontActionEvent);
     }
+    
+    EventHandler<ActionEvent> onMenuItemDeleteShapeActionEvent = new EventHandler<ActionEvent>() {
+        @Override
+        public void handle(ActionEvent event) {
+            if(isSelected)
+            {
+///TODO CONFIRMATION PROMPT                
+                container.getChildren().removeAll(selection, shape);
+            }
+        }
+    };
+    
+    EventHandler<ActionEvent> onMenuItemSendBackwardtActionEvent = new EventHandler<ActionEvent>() {
+        @Override
+        public void handle(ActionEvent event) {
+            if(isSelected)
+            {
+                rootTab.ModifyShapesOrderInPane(shape, selection, "backward");
+            }
+        }
+    };
+    
+    EventHandler<ActionEvent> onMenuItemBringForwardActionEvent = new EventHandler<ActionEvent>() {
+        @Override
+        public void handle(ActionEvent event) {
+            if(isSelected)
+            {
+                rootTab.ModifyShapesOrderInPane(shape, selection, "forward");
+            }
+        }
+    };
+    
+    EventHandler<ActionEvent> onMenuItemSendToBackActionEvent = new EventHandler<ActionEvent>() {
+        @Override
+        public void handle(ActionEvent event) {
+            if(isSelected)
+            {
+                rootTab.ModifyShapesOrderInPane(shape, selection, "back");
+            }
+        }
+    };
+    
+    EventHandler<ActionEvent> onMenuItemBringToFrontActionEvent = new EventHandler<ActionEvent>() {
+        @Override
+        public void handle(ActionEvent event) {
+            if(isSelected)
+            {
+                rootTab.ModifyShapesOrderInPane(shape, selection, "front");
+            }
+        }
+    };
     
     EventHandler<ActionEvent> onStrokeColorPickerActionEvent = new EventHandler<ActionEvent>() {
         @Override

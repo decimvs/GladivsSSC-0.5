@@ -115,10 +115,66 @@ public class sscText  implements sscShape {
         maincontroller.getButtonTextUnderline().addEventFilter(ActionEvent.ACTION, onButtonTextUnderlineActionEvent);
         maincontroller.getButtonItalicText().addEventFilter(ActionEvent.ACTION, onBoldItalicButtonsActionEvent);
         maincontroller.getButtonBoldText().addEventFilter(ActionEvent.ACTION, onBoldItalicButtonsActionEvent);
+        maincontroller.getMenuItemDeleteShape().addEventHandler(ActionEvent.ACTION, onMenuItemDeleteShapeActionEvent);
+        maincontroller.getMenuItemSendBackward().addEventHandler(ActionEvent.ACTION, onMenuItemSendBackwardtActionEvent);
+        maincontroller.getMenuItemBringForward().addEventHandler(ActionEvent.ACTION, onMenuItemBringForwardActionEvent);
+        maincontroller.getMenuItemSendToBack().addEventHandler(ActionEvent.ACTION, onMenuItemSendToBackActionEvent);
+        maincontroller.getMenuItemBringToFront().addEventHandler(ActionEvent.ACTION, onMenuItemBringToFrontActionEvent);
         
         myContainer.getChildren().add(textShape);
         myContainer.getChildren().add(textSelection);
     }
+    
+    EventHandler<ActionEvent> onMenuItemDeleteShapeActionEvent = new EventHandler<ActionEvent>() {
+        @Override
+        public void handle(ActionEvent event) {
+            if(isSelected)
+            {
+///TODO CONFIRMATION PROMPT                
+                myContainer.getChildren().removeAll(textSelection, textShape);
+            }
+        }
+    };
+    
+    EventHandler<ActionEvent> onMenuItemSendBackwardtActionEvent = new EventHandler<ActionEvent>() {
+        @Override
+        public void handle(ActionEvent event) {
+            if(isSelected)
+            {
+                rootTab.ModifyShapesOrderInPane(textShape, textSelection, "backward");
+            }
+        }
+    };
+    
+    EventHandler<ActionEvent> onMenuItemBringForwardActionEvent = new EventHandler<ActionEvent>() {
+        @Override
+        public void handle(ActionEvent event) {
+            if(isSelected)
+            {
+                rootTab.ModifyShapesOrderInPane(textShape, textSelection, "forward");
+            }
+        }
+    };
+    
+    EventHandler<ActionEvent> onMenuItemSendToBackActionEvent = new EventHandler<ActionEvent>() {
+        @Override
+        public void handle(ActionEvent event) {
+            if(isSelected)
+            {
+                rootTab.ModifyShapesOrderInPane(textShape, textSelection, "back");
+            }
+        }
+    };
+    
+    EventHandler<ActionEvent> onMenuItemBringToFrontActionEvent = new EventHandler<ActionEvent>() {
+        @Override
+        public void handle(ActionEvent event) {
+            if(isSelected)
+            {
+                rootTab.ModifyShapesOrderInPane(textShape, textSelection, "front");
+            }
+        }
+    };
     
     EventHandler<ActionEvent> onBoldItalicButtonsActionEvent = new EventHandler<ActionEvent>() {
         @Override

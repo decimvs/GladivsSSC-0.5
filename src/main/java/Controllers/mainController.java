@@ -8,18 +8,26 @@ package Controllers;
 import ImageIO.SaveImage;
 import Images.Screenshot;
 import UIControls.sscTab;
+import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TabPane;
@@ -28,6 +36,9 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.stage.FileChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 /**
  *
@@ -48,14 +59,21 @@ public class mainController implements Initializable {
     @FXML
     private TextField txtStrokeWidth, txtDashSpace, txtDashWidth, txtText;
     @FXML
-    private ToggleButton btnTextUnderline, btnItalicText, btnBoldText;
+    private ToggleButton btnTextUnderline, btnItalicText, btnBoldText, btnCrop;
     @FXML
     private ContextMenu cmShapeOptions;
     @FXML
-    private MenuItem cmiBringToFront, cmiSendToBack, cmiBringForward, cmiSendBackward, cmiDeleteShape;
+    private MenuItem cmiBringToFront, cmiSendToBack, cmiBringForward, cmiSendBackward, cmiDeleteShape, cmiCopy, cmiPaste, cmiCancelSelection;
+    @FXML
+    private MenuItem miNew, miChangeCanvasSize;
+    @FXML
+    private Menu menuFile;
     
     //Counter for autonaming files saved
     private int filesSaveCounter = 1;
+    
+    private WritableImage copiedImage = null;
+    private mainController maincontroller = this;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -66,6 +84,10 @@ public class mainController implements Initializable {
         btnScreenshot.setOnAction(this::buttonTakeScreenshotActionPerformed);
         btnText.setOnAction(this::btnTextOnActionEvent);
         btnCircle.setOnAction(this::btnCircleOnActionEvent);
+        btnCrop.addEventFilter(ActionEvent.ACTION, onButtonCropActionEvent);
+        menuFile.setOnShowing(this::menuFileShowingEvent);
+        miNew.addEventHandler(ActionEvent.ACTION, onMenuItemNewActionEvent);
+        miChangeCanvasSize.addEventHandler(ActionEvent.ACTION, onMenuItemChangeCanvasSizeActionEvent);
         
         //Setting first element selected in the border type combo box
         cbStrokeType.getSelectionModel().selectFirst();
@@ -82,6 +104,38 @@ public class mainController implements Initializable {
         cpBorderColor.setValue(Color.BLACK);
     }
     
+    EventHandler<ActionEvent> onMenuItemChangeCanvasSizeActionEvent = new EventHandler<ActionEvent>() {
+        @Override
+        public void handle(ActionEvent event) {
+            if(tabPane.getTabs().size() > 0)
+            {
+                sscTab tab = (sscTab) tabPane.getSelectionModel().getSelectedItem();
+                
+                Parent root;
+                try {
+                    FXMLLoader fxmlLoader = new FXMLLoader(getClass().getClassLoader().getResource("fxml/canvasResizeForm.fxml"));
+                    
+                    root = fxmlLoader.load();
+                    Stage stage = new Stage();
+                    stage.setTitle("Canvas resize");
+                    stage.setScene(new Scene(root));
+                    stage.initModality(Modality.APPLICATION_MODAL);
+                    
+                    
+                    CanvasResizeController crc = fxmlLoader.<CanvasResizeController>getController();
+                    crc.setMyTabContainer(tab);
+                    
+                    stage.show();
+                    
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    
+                    return;
+                }
+            }
+        }
+    };
+    
     /**
      * Performs a new Screenshot capture
      * This methods take the screnshot and shows it in a new tab
@@ -94,20 +148,26 @@ public class mainController implements Initializable {
         
         if(wi != null)
         {
-            //Create a new tab and assigning a new name
-            sscTab tab = new sscTab("Untitled-" + (tabPane.getTabs().size() + 1), this);
-            
-            
-            //Set the image on imageview
-            tab.getImageView().setImage(wi);
-            
-            //Assign tab in tabPane
-            tabPane.getTabs().add(tab);
-            
-            //Setting the new tab as the tab selected
-            tabPane.getSelectionModel().select(tab);
+            createNewTab(wi);
         }
     }
+    
+    /**
+     * Event handler for crop button.
+     * Starts the selection mode in the selected tab.
+     */
+    EventHandler<ActionEvent> onButtonCropActionEvent = new EventHandler<ActionEvent>() {
+        @Override
+        public void handle(ActionEvent event) {
+            if(tabPane.getTabs().size() > 0)
+            {
+                sscTab selTab = (sscTab) tabPane.getSelectionModel().getSelectedItem();
+                selTab.StartSelectionMode();
+                
+                btnCrop.setSelected(true);
+            }
+        }
+    };
     
     public void btnCircleOnActionEvent(ActionEvent ev)
     {
@@ -171,16 +231,79 @@ public class mainController implements Initializable {
         {
             sscTab selTab = (sscTab) tabPane.getSelectionModel().getSelectedItem();
             
-            if(SaveImage.save(selTab, "UntitledImage-" + filesSaveCounter))
-            {
-                System.out.println("File saved sucessfully");
-            }
-            else
-            {
-                System.out.println("Error when saving the image");
-            }
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Choose image name and format");
+            fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+            fileChooser.getExtensionFilters().addAll(
+                    new FileChooser.ExtensionFilter("PNG", "*.png"),
+                    new FileChooser.ExtensionFilter("JPEG", "*.jpg"),
+                    new FileChooser.ExtensionFilter("GIF", "*.gif")
+            );
             
-            filesSaveCounter++;
+            File file = fileChooser.showSaveDialog(cmShapeOptions);
+            
+            if(file != null)
+            {
+                
+                if(SaveImage.save(selTab, file))
+                {
+                    System.out.println("File saved sucessfully");
+                }
+                else
+                {
+                    System.out.println("Error when saving the image");
+                }
+            }
+        }
+    }
+    
+    private void createNewTab(WritableImage wi)
+    {
+        //Create a new tab and assigning a new name
+        sscTab tab = new sscTab("Untitled-" + (tabPane.getTabs().size() + 1), this);
+
+
+        //Set the image on imageview
+        tab.getImageView().setImage(wi);
+
+        //Assign tab in tabPane
+        tabPane.getTabs().add(tab);
+
+        //Setting the new tab as the tab selected
+        tabPane.getSelectionModel().select(tab);
+    }
+    
+    private void createNewTab()
+    {
+        //Create a new tab and assigning a new name
+        sscTab tab = new sscTab("Untitled-" + (tabPane.getTabs().size() + 1), this);
+
+        //Assign tab in tabPane
+        tabPane.getTabs().add(tab);
+
+        //Setting the new tab as the tab selected
+        tabPane.getSelectionModel().select(tab);
+    }
+    
+    EventHandler<ActionEvent> onMenuItemNewActionEvent = new EventHandler<ActionEvent>() {
+        @Override
+        public void handle(ActionEvent event) {
+            if(copiedImage != null)
+            {
+                createNewTab();
+            }
+        }
+    };
+    
+    public void menuFileShowingEvent(Event ev)
+    {
+        if(copiedImage != null)
+        {
+            miNew.setDisable(false);
+        }
+        else
+        {
+            miNew.setDisable(true);
         }
     }
     
@@ -205,4 +328,10 @@ public class mainController implements Initializable {
     public MenuItem getMenuItemBringForward() { return cmiBringForward; }
     public MenuItem getMenuItemSendBackward() { return cmiSendBackward; }
     public MenuItem getMenuItemDeleteShape() { return cmiDeleteShape; }
+    public MenuItem getMenuItemCopy() { return cmiCopy; }
+    public MenuItem getMenuItemPaste() { return cmiPaste; }
+    public MenuItem getMenuItemCancelSelection() { return cmiCancelSelection; }
+    public WritableImage getImageWriterImageCopied() { return copiedImage; }
+    public void setImageWriterImageCopied(WritableImage wi) { if(wi != null){ copiedImage = wi; } }
+    public ToggleButton getButtonCropImage() { return btnCrop; }
 }

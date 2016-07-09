@@ -80,7 +80,6 @@ public class MainApp extends Application implements NativeKeyListener {
     @Override
     public void stop()
     {
-        System.out.println("Eixint");
         try {
             GlobalScreen.unregisterNativeHook();
         } catch (NativeHookException ex) {
@@ -97,8 +96,6 @@ public class MainApp extends Application implements NativeKeyListener {
     }
     
     public void nativeKeyPressed(NativeKeyEvent e) {
-        System.out.println("Key Pressed: " + NativeKeyEvent.getKeyText(e.getKeyCode()));
-
         if (e.getKeyCode() == NativeKeyEvent.VC_ESCAPE) {
             try {
                 GlobalScreen.unregisterNativeHook();
@@ -108,9 +105,7 @@ public class MainApp extends Application implements NativeKeyListener {
         }
     }
 
-    public void nativeKeyReleased(NativeKeyEvent e) {
-        System.out.println("Key Released: " + NativeKeyEvent.getKeyText(e.getKeyCode()));
-        
+    public void nativeKeyReleased(NativeKeyEvent e) {    
         //Esta sentencia permet de executar el codi dins del fil de la aplicació javaFX
         Platform.runLater( () -> {
             if(e.getKeyCode() == NativeKeyEvent.VC_PRINTSCREEN)
@@ -122,7 +117,7 @@ public class MainApp extends Application implements NativeKeyListener {
     }
 
     public void nativeKeyTyped(NativeKeyEvent e) {
-        System.out.println("Key Typed: " + e.getKeyText(e.getKeyCode()));
+        //Nothing to do
     }
     
 }
