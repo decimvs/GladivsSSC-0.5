@@ -5,8 +5,7 @@
  */
 package Shapes;
 
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
+import java.util.HashMap;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.shape.Shape;
 
@@ -45,5 +44,9 @@ public interface sscShape {
     public void DrawSelectionArea(double width, double height);
     
     public Shape getShape();
+    
+    public HashMap<String,Double> getShapeDimensions();
+    
+    public void setShapeSelected(boolean selected);
     
 }

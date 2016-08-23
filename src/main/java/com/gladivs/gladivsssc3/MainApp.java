@@ -10,6 +10,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 import org.jnativehook.GlobalScreen;
@@ -39,7 +40,7 @@ public class MainApp extends Application implements NativeKeyListener {
         }
         
         final FXMLLoader loader = new FXMLLoader(
-            getClass().getResource("/fxml/mainForm.fxml")
+            getClass().getResource("/fxml/mainFormB.fxml")
         );
         
         Parent root;
@@ -59,7 +60,8 @@ public class MainApp extends Application implements NativeKeyListener {
         
         Scene scene = new Scene(root);
         
-        primaryStage.setTitle("Gladivs Simple Screen Capture");
+        primaryStage.setTitle("Gladivs - Image Editor");
+        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/icona_sense_sombra.png")));
         primaryStage.setScene(scene);
         primaryStage.show();
         

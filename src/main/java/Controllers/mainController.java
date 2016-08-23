@@ -16,13 +16,14 @@ import java.util.ResourceBundle;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
-import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.ComboBox;
@@ -31,6 +32,7 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TabPane;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.image.WritableImage;
@@ -49,7 +51,7 @@ public class mainController implements Initializable {
     @FXML
     private TabPane tabPane;
     @FXML
-    private Button btnRectangle, btnSave, btnScreenshot, btnText, btnCircle;
+    private Button btnRectangle, btnSave, btnScreenshot, btnText, btnCircle, btnExportImage, btnNewDocument;
     @FXML
     private ColorPicker cpFillColor, cpBorderColor;
     @FXML
@@ -57,17 +59,19 @@ public class mainController implements Initializable {
     @FXML
     private Slider slStrokeWidth, slDashSpace, slDashWidth;
     @FXML
-    private TextField txtStrokeWidth, txtDashSpace, txtDashWidth, txtText;
+    private TextField txtStrokeWidth, txtDashSpace, txtDashWidth;
     @FXML
-    private ToggleButton btnTextUnderline, btnItalicText, btnBoldText, btnCrop;
+    private ToggleButton btnTextUnderline, btnItalicText, btnBoldText, btnCrop, btnSelectionTool;
     @FXML
     private ContextMenu cmShapeOptions;
     @FXML
     private MenuItem cmiBringToFront, cmiSendToBack, cmiBringForward, cmiSendBackward, cmiDeleteShape, cmiCopy, cmiPaste, cmiCancelSelection;
     @FXML
-    private MenuItem miNew, miChangeCanvasSize;
+    private MenuItem miNewDocument, miChangeCanvasSize, miExportImage, miQuickExportImage;
     @FXML
     private Menu menuFile;
+    @FXML
+    private TextArea txtText;
     
     //Counter for autonaming files saved
     private int filesSaveCounter = 1;
@@ -85,9 +89,13 @@ public class mainController implements Initializable {
         btnText.setOnAction(this::btnTextOnActionEvent);
         btnCircle.setOnAction(this::btnCircleOnActionEvent);
         btnCrop.addEventFilter(ActionEvent.ACTION, onButtonCropActionEvent);
-        menuFile.setOnShowing(this::menuFileShowingEvent);
-        miNew.addEventHandler(ActionEvent.ACTION, onMenuItemNewActionEvent);
+        btnSelectionTool.addEventFilter(ActionEvent.ACTION, onButtonSelectionToolActionEvent);
+        miNewDocument.addEventHandler(ActionEvent.ACTION, onMenuItemNewActionEvent);
+        btnNewDocument.addEventHandler(ActionEvent.ACTION, onMenuItemNewActionEvent);
         miChangeCanvasSize.addEventHandler(ActionEvent.ACTION, onMenuItemChangeCanvasSizeActionEvent);
+        btnExportImage.setOnAction(this::exportImageActionPerformed);
+        miExportImage.setOnAction(this::exportImageActionPerformed);
+        miQuickExportImage.setOnAction(this::quickExportImageActionPerformed);
         
         //Setting first element selected in the border type combo box
         cbStrokeType.getSelectionModel().selectFirst();
@@ -154,7 +162,7 @@ public class mainController implements Initializable {
     
     /**
      * Event handler for crop button.
-     * Starts the selection mode in the selected tab.
+     * Starts the selection mode in the selected tab for performing a crop action.
      */
     EventHandler<ActionEvent> onButtonCropActionEvent = new EventHandler<ActionEvent>() {
         @Override
@@ -162,9 +170,26 @@ public class mainController implements Initializable {
             if(tabPane.getTabs().size() > 0)
             {
                 sscTab selTab = (sscTab) tabPane.getSelectionModel().getSelectedItem();
-                selTab.StartSelectionMode();
+                selTab.StartCropMode();
                 
                 btnCrop.setSelected(true);
+            }
+        }
+    };
+    
+    /**
+     * Event handler for selection tool button.
+     * Starts the selection mode in the selected tab for performing a selection of objects inside the canvas
+     */
+    EventHandler<ActionEvent> onButtonSelectionToolActionEvent = new EventHandler<ActionEvent>() {
+        @Override
+        public void handle(ActionEvent event) {
+            if(tabPane.getTabs().size() > 0)
+            {
+                sscTab selTab = (sscTab) tabPane.getSelectionModel().getSelectedItem();
+                selTab.StartSelectionMode();
+                
+                btnSelectionTool.setSelected(true);
             }
         }
     };
@@ -211,11 +236,19 @@ public class mainController implements Initializable {
         }
     };
     
+    /**
+     * Event action performer for the Take Screen Shot action
+     * @param ev 
+     */
     public void buttonTakeScreenshotActionPerformed(ActionEvent ev)
     {
         takeNewScreenshot();
     }
     
+    /**
+     * Event action performer for the button Rectangle
+     * @param ev 
+     */
     public void buttonRectangleActionPerformed(ActionEvent ev)
     {
         if(tabPane.getTabs().size() > 0)
@@ -227,30 +260,67 @@ public class mainController implements Initializable {
     
     public void buttonSaveActionPerformed(ActionEvent ev)
     {
+       
+    }
+    
+    public void exportImageActionPerformed(ActionEvent ev){
+        tabExportSnapshotToFile(false);
+    }
+    
+    public void quickExportImageActionPerformed(ActionEvent ev){
+        tabExportSnapshotToFile(true);
+    }
+    
+    /**
+     * Perform the action for the buttons and menu items: Export
+     */
+    private void tabExportSnapshotToFile(boolean quickSave){
         if(tabPane.getTabs().size() > 0)
         {
             sscTab selTab = (sscTab) tabPane.getSelectionModel().getSelectedItem();
+            File file;
+            File initialDirectory;
             
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Choose image name and format");
-            fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
-            fileChooser.getExtensionFilters().addAll(
+            //Verify if we need to show the file chooser dialog
+            if(!quickSave || (quickSave && selTab.getFileForSave() == null)){
+                if(selTab.getFileForSave() == null){
+                    initialDirectory = new File(System.getProperty("user.home"));
+                }
+                else
+                {                    
+                    initialDirectory = new File(selTab.getFileForSave().getParent());
+                }
+                
+                FileChooser fileChooser = new FileChooser();
+                fileChooser.setTitle("Choose image name and format");
+                fileChooser.setInitialDirectory(initialDirectory);
+                fileChooser.getExtensionFilters().addAll(
                     new FileChooser.ExtensionFilter("PNG", "*.png"),
                     new FileChooser.ExtensionFilter("JPEG", "*.jpg"),
                     new FileChooser.ExtensionFilter("GIF", "*.gif")
-            );
+                );
             
-            File file = fileChooser.showSaveDialog(cmShapeOptions);
+                file = fileChooser.showSaveDialog(cmShapeOptions);
+            } else {
+                file = selTab.getFileForSave();
+            }
             
-            if(file != null)
-            {
-                
+            //Checking that is possible to write in the file or user canceled chosing file
+            if(file != null){
                 if(SaveImage.save(selTab, file))
                 {
+                    Alert alo = new Alert(AlertType.INFORMATION, "File saved sucessfully");
                     System.out.println("File saved sucessfully");
+
+                    //Set the file location for quickly save later
+                    selTab.setFileForSave(file);
+                    //Show success alert
+                    alo.show();
                 }
                 else
                 {
+                    Alert ale = new Alert(AlertType.ERROR, "Error when saving the image");
+                    ale.show();
                     System.out.println("Error when saving the image");
                 }
             }
@@ -288,24 +358,9 @@ public class mainController implements Initializable {
     EventHandler<ActionEvent> onMenuItemNewActionEvent = new EventHandler<ActionEvent>() {
         @Override
         public void handle(ActionEvent event) {
-            if(copiedImage != null)
-            {
-                createNewTab();
-            }
+            createNewTab();
         }
     };
-    
-    public void menuFileShowingEvent(Event ev)
-    {
-        if(copiedImage != null)
-        {
-            miNew.setDisable(false);
-        }
-        else
-        {
-            miNew.setDisable(true);
-        }
-    }
     
     public ColorPicker getFillColorPicker(){ return cpFillColor; }
     public ColorPicker getBorderColorPicker(){ return cpBorderColor; }
@@ -316,7 +371,7 @@ public class mainController implements Initializable {
     public TextField getTextFieldDashSpace(){ return txtDashSpace; }
     public Slider getSliderDashWidth(){ return slDashWidth; }
     public TextField getTextFieldDashWidth(){ return txtDashWidth; }
-    public TextField getTextFieldText() { return txtText; }
+    public TextArea getTextFieldText() { return txtText; }
     public ComboBox getComboBoxFontSize() { return cbxFontSize; }
     public ComboBox getComboBoxFontChooser() { return cbxFontChooser; }
     public ToggleButton getButtonTextUnderline() { return btnTextUnderline; }
@@ -334,4 +389,6 @@ public class mainController implements Initializable {
     public WritableImage getImageWriterImageCopied() { return copiedImage; }
     public void setImageWriterImageCopied(WritableImage wi) { if(wi != null){ copiedImage = wi; } }
     public ToggleButton getButtonCropImage() { return btnCrop; }
+    public TabPane getTabPane() { return tabPane; }
+    public ToggleButton getButtonSelectionTool() { return btnSelectionTool; }
 }

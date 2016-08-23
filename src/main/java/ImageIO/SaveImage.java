@@ -17,10 +17,12 @@ import java.awt.image.WritableRaster;
 import java.awt.Image;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
-import javafx.scene.control.ScrollPane;
+import javafx.scene.Node;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.Pane;
 import javax.imageio.ImageIO;
@@ -34,21 +36,42 @@ public class SaveImage {
     private static final int[] RGB_MASKS = {0xFF0000, 0xFF00, 0xFF};
     private static final ColorModel RGB_OPAQUE = new DirectColorModel(32, RGB_MASKS[0], RGB_MASKS[1], RGB_MASKS[2]);
     
+    
     public static boolean save(sscTab tab, File file)
     {
-        //int indexImageView = -1;
+        //Get the canvas pane
+        Pane pn = tab.getPane();
         
-        ScrollPane tabContent = (ScrollPane) tab.getContent();
+        //Create a copy of canvas pane and set background color
+        Pane pane = new Pane();
+        pane.setMinWidth(pn.getWidth());
+        pane.setMinHeight(pn.getHeight());
+        pane.setStyle(
+            "-fx-background-color: " + tab.getBackgroundCanvasColor() + ";"
+        );
+        
+        //Copy all nodes inside the canvas pane
+        ObservableList<Node> children = pn.getChildren();
+        ArrayList<Node> childrenCopy = new ArrayList<>();
+       
+        for(int i = 0; children.size() > i; i++)
+        {
+            childrenCopy.add(children.get(i));
+        }
+        
+        //Set all nodes inside the copy pane
+        pane.getChildren().addAll(childrenCopy);
 
-        Pane paneContent = (Pane) tabContent.getContent();
-
-        WritableImage wi = new WritableImage(((Double) paneContent.getWidth()).intValue(), ((Double) paneContent.getHeight()).intValue());
+        WritableImage wi = new WritableImage(((Double) pn.getWidth()).intValue(), ((Double) pn.getHeight()).intValue());
 
         //Get a snapshot of the Pane and save it to a file
-        tab.getPane().snapshot(null, wi);
+        pane.snapshot(null, wi);
 
         String extension = file.getName();
         String format;
+        
+        //Put all nodes in the canvas pane again
+        pn.getChildren().setAll(childrenCopy);
 
         if(extension.length() > 0 && extension.lastIndexOf(".") > 0)
         {
@@ -73,6 +96,13 @@ public class SaveImage {
         return false;
     }
     
+    /**
+     * Save method for the PNG and GIF formats
+     * @param format String "png" or "gif": format image
+     * @param file File object to save for
+     * @param wi WritableImage object containing the image to save for
+     * @return Return true if it has success false instead
+     */
     private static boolean savePngGifFormats(String format, File file, WritableImage wi)
     {
         try {
@@ -85,6 +115,13 @@ public class SaveImage {
         }
     }
     
+    /**
+     * Save method for the JPEG format. It performs a transparent layers conversion
+     * for make a correct image that is a copy that we can see on the screen.
+     * @param file File object to save for
+     * @param wi WritableImage object containing the image to save for
+     * @return Return true if it has success false instead
+     */
     private static boolean saveJpgFormat(File file, WritableImage wi)
     {
         Image img = SwingFXUtils.fromFXImage(wi, null);

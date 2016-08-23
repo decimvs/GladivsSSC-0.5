@@ -7,6 +7,7 @@ package Shapes;
 
 import Controllers.mainController;
 import UIControls.sscTab;
+import java.util.HashMap;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -623,4 +624,21 @@ public class sscEllipse implements sscShape {
     public int getIndexStrokeType() { return indexStrokeType; }
     public void setIndexStrokeType(int index){ indexStrokeType = index; }
     
+    @Override
+    public HashMap<String, Double> getShapeDimensions() 
+    {
+        HashMap<String, Double> mhm = new HashMap<>();
+        
+        mhm.put("x", shape.getCenterX() - shape.getRadiusX());
+        mhm.put("y", shape.getCenterY() - shape.getRadiusY());
+        mhm.put("translateX", shape.getTranslateX());
+        mhm.put("translateY", shape.getTranslateY());
+        
+        return mhm;
+    }
+    
+    @Override
+    public void setShapeSelected(boolean selected) {
+        isSelected = selected;
+    }
 }

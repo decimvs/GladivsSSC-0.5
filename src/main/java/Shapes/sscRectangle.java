@@ -7,6 +7,7 @@ package Shapes;
 
 import Controllers.mainController;
 import UIControls.sscTab;
+import java.util.HashMap;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -52,6 +53,7 @@ public class sscRectangle implements sscShape {
     private boolean isSelected = false;
     private boolean wasDragged = false;
     private boolean isMouseOver = false;
+    private boolean isMultiSelectionSelected = false;
     
     private int indexStrokeType = 0;
     
@@ -117,6 +119,7 @@ public class sscRectangle implements sscShape {
          * Adding all event handlers and filters.
          */
         container.addEventFilter(MouseEvent.MOUSE_PRESSED, onPaneMouseButtonPressed);
+        container.addEventFilter(MouseEvent.MOUSE_DRAGGED, onPaneMouseDraggedEventHandler);
         maincontroller.getFillColorPicker().addEventFilter(ActionEvent.ACTION, onFillColorPickerActionEvent);
         maincontroller.getSliderStrokeWidth().valueProperty().addListener(onSlideStrokeWidthValueChange);
         maincontroller.getStrokeTypeComboBox().addEventFilter(ActionEvent.ACTION, onStrokeTypeDDMChanged);
@@ -274,16 +277,74 @@ public class sscRectangle implements sscShape {
     EventHandler<MouseEvent> onPaneMouseButtonPressed = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent event) {
-            if(!isMouseOver && isSelected)
-            {
-                isSelected = false;
-                
-                selection.setStroke(null); 
-                selection.setStrokeWidth(0);
+            if(event.getButton().equals(MouseButton.PRIMARY)){
+                if(event.getClickCount() == 1){
+                    if(!isMouseOver && isSelected && !isMultiSelectionSelected)
+                    {
+                        isSelected = false;
+
+                        selection.setStroke(null); 
+                        selection.setStrokeWidth(0);
+                    } else {
+                        if(isSelected && isMultiSelectionSelected)
+                        {
+                            origSceneX = event.getSceneX();
+                            origSceneY = event.getSceneY();
+                            origTranslateX = shape.getTranslateX();
+                            origTranslateY = shape.getTranslateY();
+
+                            //Establir les dimensions originals de l'objecte
+                            SaveShapeDimensions(selection);
+
+                            isTranslating = true;
+                        }
+                    }
+                } else {
+                    if(isSelected){
+                        isSelected = false;
+                        isMultiSelectionSelected = false;
+                        
+                        selection.setStroke(null);
+                        selection.setStrokeWidth(0);
+                        
+                        //Cambiar el valor a false per a desbloquejar el mode edició en el cas de estar activat.
+                        isDragEditting = false;
+                        isTranslating = false;
+                        selectedEditionEdge = -1;
+                        wasDragged = false;
+                    }
+                }
             }
         }
     };
     
+    EventHandler<MouseEvent> onPaneMouseDraggedEventHandler = new EventHandler<MouseEvent>() {
+        @Override
+        public void handle(MouseEvent ev) {
+            double offsetX = ev.getSceneX() - origSceneX;
+            double offsetY = ev.getSceneY() - origSceneY;
+            double newTranslateX = origTranslateX + offsetX;
+            double newTranslateY = origTranslateY + offsetY;
+            double newWidth = origWidth + offsetX;
+            double newHeight = origHeight + offsetY;
+            
+            //Comprobació entre desplaçament o edició de tamany
+            if(isMultiSelectionSelected && isTranslating)
+            {
+                selection.setCursor(Cursor.CLOSED_HAND);
+                selection.setTranslateX(newTranslateX);
+                shape.setTranslateX(newTranslateX);
+                selection.setTranslateY(newTranslateY);
+                shape.setTranslateY(newTranslateY);
+            }
+            
+            wasDragged = true;
+        }
+    };
+    
+    /**
+     * Updates all informations about the shape in the shape properties panels
+     */
     private void updateShapePropertiesOnPropertiesWindow()
     {
         Slider slider = maincontroller.getSliderStrokeWidth();
@@ -316,23 +377,25 @@ public class sscRectangle implements sscShape {
          //Enregistrament dels valors de la posició de l'objecte prèvia a l'arrossegament
         if(ev.getButton() == MouseButton.PRIMARY)
         {
-            origSceneX = ev.getSceneX();
-            origSceneY = ev.getSceneY();
-            origTranslateX = shape.getTranslateX();
-            origTranslateY = shape.getTranslateY();
+            if(!isMultiSelectionSelected){
+                origSceneX = ev.getSceneX();
+                origSceneY = ev.getSceneY();
+                origTranslateX = shape.getTranslateX();
+                origTranslateY = shape.getTranslateY();
 
-            //Establir les dimensions originals de l'objecte
-            SaveShapeDimensions(selection);
+                //Establir les dimensions originals de l'objecte
+                SaveShapeDimensions(selection);
 
-            //Comprobació si click en la zona de edició o en el centre de la figura
-            if(SelectionArea(shape, ev))
-            {
-                isDragEditting = true;
-            }
-            else
-            {
-                isTranslating = true;
-                selection.setCursor(Cursor.CLOSED_HAND);
+                //Comprobació si click en la zona de edició o en el centre de la figura
+                if(SelectionArea(shape, ev))
+                {
+                    isDragEditting = true;
+                }
+                else
+                {
+                    isTranslating = true;
+                    selection.setCursor(Cursor.CLOSED_HAND);
+                }
             }
         }
     }
@@ -376,6 +439,7 @@ public class sscRectangle implements sscShape {
             else if(!wasDragged && isSelected)
             {
                 isSelected = false;
+                isMultiSelectionSelected = false;
             }
 
             //Cambiar el valor a false per a desbloquejar el mode edició en el cas de estar activat.
@@ -615,5 +679,32 @@ public class sscRectangle implements sscShape {
     
     public int getIndexStrokeType() { return indexStrokeType; }
     public void setIndexStrokeType(int index){ indexStrokeType = index; }
+
+    @Override
+    public HashMap<String, Double> getShapeDimensions() 
+    {
+        HashMap<String, Double> mhm = new HashMap<>();
+        
+        mhm.put("x", shape.getX());
+        mhm.put("y", shape.getY());
+        mhm.put("translateX", shape.getTranslateX());
+        mhm.put("translateY", shape.getTranslateY());
+        
+        return mhm;
+    }
+
+    @Override
+    public void setShapeSelected(boolean selected) {
+        isSelected = selected;
+        isMultiSelectionSelected = selected;
+        
+        if(selected){
+            selection.setStroke(Color.CORNFLOWERBLUE);  
+            selection.setStrokeWidth(2);
+        } else {
+            selection.setStroke(null);  
+            selection.setStrokeWidth(0);
+        }
+    }
     
 }

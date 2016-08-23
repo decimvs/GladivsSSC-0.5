@@ -7,10 +7,12 @@ package Shapes;
 
 import Controllers.mainController;
 import UIControls.sscTab;
+import java.util.HashMap;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Bounds;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
@@ -19,6 +21,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
 import javafx.scene.shape.StrokeType;
 import javafx.scene.text.Font;
@@ -34,8 +37,8 @@ public class sscText  implements sscShape {
     
     private Pane myContainer;
     private mainController maincontroller;
-    private Text textShape;
-    private Text textSelection;
+    private Text shape;
+    private Rectangle selection;
     private sscTab rootTab;
     
     private double origSceneX, origSceneY;
@@ -53,55 +56,59 @@ public class sscText  implements sscShape {
         maincontroller = mc;
         rootTab = tab;
         
-        Text tx = new Text();
-        Text txs = new Text();
+        shape = new Text();
+        selection = new Rectangle();
         
-        textShape = tx;
-        textSelection = txs;
-        
-        textSelection.setFill(new Color(0,0,0,0));
+        selection.setFill(new Color(0,0,0,0));
         
         //Initialising text. Set text value, font family and size
-        setText(maincontroller.getTextFieldText().getText());
-        textShape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
-        textSelection.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
+        shape.setText("Text");
+        shape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));    
         
-        textShape.setX(80);
-        textShape.setY(80);
+        //Setting text origin
+        shape.setX(80);
+        shape.setY(80);
         
-        textSelection.setX(80);
-        textSelection.setY(80);
+        //Set selection origin
+        Bounds shapeBounds = shape.getBoundsInParent();
         
-        textShape.setStrokeType(StrokeType.CENTERED);
-        textSelection.setStrokeType(StrokeType.OUTSIDE);
+        selection.setX(shapeBounds.getMinX());
+        selection.setY(shapeBounds.getMinY());
+        
+        shape.setStrokeType(StrokeType.CENTERED);
+        selection.setStrokeType(StrokeType.OUTSIDE);
         
         switch(maincontroller.getStrokeTypeComboBox().getSelectionModel().getSelectedIndex())
         {
             case 0:     //Border none
-                 textShape.setStrokeWidth(0);
-                 textShape.setStroke(Color.BLACK);
+                 shape.setStrokeWidth(0);
+                 shape.setStroke(Color.BLACK);
                  indexStrokeType = 0;
                 break;
             case 1:     //Border lineal
-                textShape.setStrokeWidth(maincontroller.getSliderStrokeWidth().getValue());
-                textShape.setStroke(maincontroller.getBorderColorPicker().getValue());
+                shape.setStrokeWidth(maincontroller.getSliderStrokeWidth().getValue());
+                shape.setStroke(maincontroller.getBorderColorPicker().getValue());
                 indexStrokeType = 1;
                 break;
             case 2:     //Border dashed
-                textShape.getStrokeDashArray().clear();
-                textShape.getStrokeDashArray().addAll(maincontroller.getSliderDashWidth().getValue(), maincontroller.getSliderDashSpace().getValue());
-                textShape.setStrokeWidth(maincontroller.getSliderStrokeWidth().getValue());
-                textShape.setStroke(maincontroller.getBorderColorPicker().getValue());
+                shape.getStrokeDashArray().clear();
+                shape.getStrokeDashArray().addAll(maincontroller.getSliderDashWidth().getValue(), maincontroller.getSliderDashSpace().getValue());
+                shape.setStrokeWidth(maincontroller.getSliderStrokeWidth().getValue());
+                shape.setStroke(maincontroller.getBorderColorPicker().getValue());
                 indexStrokeType = 2;
                 break;
         }
         
+        //Set selection area size
+        selection.setWidth(shapeBounds.getWidth());
+        selection.setHeight(shapeBounds.getHeight());
+        
         //Assigning event handlers
-        textSelection.setOnMousePressed(this::SelectionOnMousePressedEventHandler);
-        textSelection.setOnMouseDragged(this::SelectionOnMouseDraggedEventHandler);
-        textSelection.setOnMouseReleased(this::SelectionOnMouseButtonReleasedEventHandler);
-        textSelection.setOnMouseEntered(this::SelectionOnMouseOverEventHandler);
-        textSelection.setOnMouseExited(this::SelectionOnMouseOutEventHandler);
+        selection.setOnMousePressed(this::SelectionOnMousePressedEventHandler);
+        selection.setOnMouseDragged(this::SelectionOnMouseDraggedEventHandler);
+        selection.setOnMouseReleased(this::SelectionOnMouseButtonReleasedEventHandler);
+        selection.setOnMouseEntered(this::SelectionOnMouseOverEventHandler);
+        selection.setOnMouseExited(this::SelectionOnMouseOutEventHandler);
         maincontroller.getTextFieldText().addEventFilter(KeyEvent.KEY_RELEASED, onTextKeysTiped);
         maincontroller.getComboBoxFontSize().addEventFilter(ActionEvent.ACTION, onChangeFontFamilyOrSize);
         maincontroller.getComboBoxFontChooser().addEventFilter(ActionEvent.ACTION, onChangeFontFamilyOrSize);
@@ -121,8 +128,8 @@ public class sscText  implements sscShape {
         maincontroller.getMenuItemSendToBack().addEventHandler(ActionEvent.ACTION, onMenuItemSendToBackActionEvent);
         maincontroller.getMenuItemBringToFront().addEventHandler(ActionEvent.ACTION, onMenuItemBringToFrontActionEvent);
         
-        myContainer.getChildren().add(textShape);
-        myContainer.getChildren().add(textSelection);
+        myContainer.getChildren().add(shape);
+        myContainer.getChildren().add(selection);
     }
     
     EventHandler<ActionEvent> onMenuItemDeleteShapeActionEvent = new EventHandler<ActionEvent>() {
@@ -131,7 +138,7 @@ public class sscText  implements sscShape {
             if(isSelected)
             {
 ///TODO CONFIRMATION PROMPT                
-                myContainer.getChildren().removeAll(textSelection, textShape);
+                myContainer.getChildren().removeAll(selection, shape);
             }
         }
     };
@@ -141,7 +148,7 @@ public class sscText  implements sscShape {
         public void handle(ActionEvent event) {
             if(isSelected)
             {
-                rootTab.ModifyShapesOrderInPane(textShape, textSelection, "backward");
+                rootTab.ModifyShapesOrderInPane(shape, selection, "backward");
             }
         }
     };
@@ -151,7 +158,7 @@ public class sscText  implements sscShape {
         public void handle(ActionEvent event) {
             if(isSelected)
             {
-                rootTab.ModifyShapesOrderInPane(textShape, textSelection, "forward");
+                rootTab.ModifyShapesOrderInPane(shape, selection, "forward");
             }
         }
     };
@@ -161,7 +168,7 @@ public class sscText  implements sscShape {
         public void handle(ActionEvent event) {
             if(isSelected)
             {
-                rootTab.ModifyShapesOrderInPane(textShape, textSelection, "back");
+                rootTab.ModifyShapesOrderInPane(shape, selection, "back");
             }
         }
     };
@@ -171,7 +178,7 @@ public class sscText  implements sscShape {
         public void handle(ActionEvent event) {
             if(isSelected)
             {
-                rootTab.ModifyShapesOrderInPane(textShape, textSelection, "front");
+                rootTab.ModifyShapesOrderInPane(shape, selection, "front");
             }
         }
     };
@@ -186,27 +193,26 @@ public class sscText  implements sscShape {
                 
                 if(btnbold.isSelected() && btnitalic.isSelected())
                 {
-                    textShape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.BOLD, FontPosture.ITALIC, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
-                    textSelection.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.BOLD, FontPosture.ITALIC, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
+                    shape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.BOLD, FontPosture.ITALIC, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
                 }
                 else if (btnbold.isSelected() && !btnitalic.isSelected())
                 {
-                    textShape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.BOLD, FontPosture.REGULAR, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
-                    textSelection.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.BOLD, FontPosture.REGULAR, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
+                    shape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.BOLD, FontPosture.REGULAR, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
                 }
                 else if (!btnbold.isSelected() && btnitalic.isSelected())
                 {
-                    textShape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.NORMAL, FontPosture.ITALIC, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
-                    textSelection.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.NORMAL, FontPosture.ITALIC, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
+                    shape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.NORMAL, FontPosture.ITALIC, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
                 }
                 else
                 {
-                    textShape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.NORMAL, FontPosture.REGULAR, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
-                    textSelection.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.NORMAL, FontPosture.REGULAR, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
+                    shape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.NORMAL, FontPosture.REGULAR, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
                 }
                 
                 //Request focus in Pane container to unfocus this control.
                 myContainer.requestFocus();
+                
+                //Update selection area size
+                updateSelectionSize();
             }
         }
     };
@@ -216,20 +222,23 @@ public class sscText  implements sscShape {
         public void handle(ActionEvent event) {
             if(isSelected)
             {
-                if(textShape.isUnderline())
+                if(shape.isUnderline())
                 {
-                    textShape.setUnderline(false);
-                    textSelection.setUnderline(false);
+                    shape.setUnderline(false);
+                    //selection.setUnderline(false);
                     maincontroller.getButtonTextUnderline().setSelected(false);
                     myContainer.requestFocus();
                 }
                 else
                 {
-                    textShape.setUnderline(true);
-                    textSelection.setUnderline(true);
+                    shape.setUnderline(true);
+                    //selection.setUnderline(true);
                     maincontroller.getButtonTextUnderline().setSelected(true);
                     myContainer.requestFocus();
                 }
+                
+                //Update selection area size
+                updateSelectionSize();
             }
         }
     };
@@ -243,12 +252,15 @@ public class sscText  implements sscShape {
                 if(maincontroller.getStrokeTypeComboBox().getSelectionModel().getSelectedIndex() > 0)
                 {
                     Slider slider = maincontroller.getSliderStrokeWidth();
-                    Double width = textShape.getStrokeWidth();
+                    Double width = shape.getStrokeWidth();
 
                     if(slider.getValue() != width)
                     {
-                        textShape.setStrokeWidth(slider.getValue());
+                        shape.setStrokeWidth(slider.getValue());
                     }
+                    
+                    //Update selection area size
+                    updateSelectionSize();
                 }
             }
         }
@@ -262,8 +274,11 @@ public class sscText  implements sscShape {
                 Slider sliderSpace = maincontroller.getSliderDashSpace();
                 Slider sliderWidth = maincontroller.getSliderDashWidth();
                 
-                textShape.getStrokeDashArray().clear();
-                textShape.getStrokeDashArray().addAll(sliderWidth.getValue(), sliderSpace.getValue());
+                shape.getStrokeDashArray().clear();
+                shape.getStrokeDashArray().addAll(sliderWidth.getValue(), sliderSpace.getValue());
+                
+                //Update selection area size
+                updateSelectionSize();
             }
         }
     };
@@ -278,21 +293,24 @@ public class sscText  implements sscShape {
                 switch(cb.getSelectionModel().getSelectedIndex())
                 {
                     case 0:     //none
-                        textShape.setStrokeWidth(0);
+                        shape.setStrokeWidth(0);
                         indexStrokeType = 0;
                         break;
                     case 1:     //lineal
-                        textShape.getStrokeDashArray().clear();
-                        textShape.setStrokeWidth(maincontroller.getSliderStrokeWidth().getValue());
+                        shape.getStrokeDashArray().clear();
+                        shape.setStrokeWidth(maincontroller.getSliderStrokeWidth().getValue());
                         indexStrokeType = 1;
                         break;
                     case 2:     //punts
-                        textShape.getStrokeDashArray().clear();
-                        textShape.getStrokeDashArray().addAll(maincontroller.getSliderDashWidth().getValue(), maincontroller.getSliderDashSpace().getValue());
-                        textShape.setStrokeWidth(maincontroller.getSliderStrokeWidth().getValue());
+                        shape.getStrokeDashArray().clear();
+                        shape.getStrokeDashArray().addAll(maincontroller.getSliderDashWidth().getValue(), maincontroller.getSliderDashSpace().getValue());
+                        shape.setStrokeWidth(maincontroller.getSliderStrokeWidth().getValue());
                         indexStrokeType = 2;
                         break;
                 }
+                
+                //Update selection area size
+                updateSelectionSize();
             }
         }
     };
@@ -302,7 +320,7 @@ public class sscText  implements sscShape {
         public void handle(ActionEvent ev) {
             if(isSelected)
             {
-                textShape.setStroke(maincontroller.getBorderColorPicker().getValue());
+                shape.setStroke(maincontroller.getBorderColorPicker().getValue());
             }
         }
     };
@@ -312,7 +330,7 @@ public class sscText  implements sscShape {
         public void handle(ActionEvent event) {
             if(isSelected)
             {
-                textShape.setFill(maincontroller.getFillColorPicker().getValue());
+                shape.setFill(maincontroller.getFillColorPicker().getValue());
             }
         }
     };
@@ -322,7 +340,7 @@ public class sscText  implements sscShape {
         public void handle(MouseEvent event) {
             if(!isMouseOver && isSelected)
             {
-                textSelection.setStrokeWidth(0);
+                selection.setStrokeWidth(0);
                 
                 isSelected = false;
             }
@@ -339,24 +357,25 @@ public class sscText  implements sscShape {
                 
                 if(btnbold.isSelected() && btnitalic.isSelected())
                 {
-                    textShape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.BOLD, FontPosture.ITALIC, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
-                    textSelection.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.BOLD, FontPosture.ITALIC, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
+                    shape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.BOLD, FontPosture.ITALIC, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
                 }
                 else if (btnbold.isSelected() && !btnitalic.isSelected())
                 {
-                    textShape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.BOLD, FontPosture.REGULAR, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
-                    textSelection.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.BOLD, FontPosture.REGULAR, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
+                    shape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.BOLD, FontPosture.REGULAR, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
                 }
                 else if (!btnbold.isSelected() && btnitalic.isSelected())
                 {
-                    textShape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.NORMAL, FontPosture.ITALIC, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
-                    textSelection.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.NORMAL, FontPosture.ITALIC, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
+                    shape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.NORMAL, FontPosture.ITALIC, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
                 }
                 else
                 {
-                    textShape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.NORMAL, FontPosture.REGULAR, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
-                    textSelection.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.NORMAL, FontPosture.REGULAR, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
+                    shape.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.NORMAL, FontPosture.REGULAR, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));//selection.setFont(Font.font((String) maincontroller.getComboBoxFontChooser().getSelectionModel().getSelectedItem(), FontWeight.NORMAL, FontPosture.REGULAR, Double.parseDouble((String) maincontroller.getComboBoxFontSize().getValue())));
                 }
+                
+                shape.setText(maincontroller.getTextFieldText().getText());
+                
+                //Update selection area size
+                updateSelectionSize();
             }
         }
         
@@ -367,18 +386,15 @@ public class sscText  implements sscShape {
         public void handle(KeyEvent ev) {
             if(isSelected)
             {
-                textShape.setText(maincontroller.getTextFieldText().getText());
-                textSelection.setText(maincontroller.getTextFieldText().getText());
+                //Update text
+                shape.setText(maincontroller.getTextFieldText().getText());
+                
+                //Update selection box size
+                updateSelectionSize();
             }
         }
         
     };
-    
-    public void setText (String text)
-    {
-            textShape.setText(text);
-            textSelection.setText(text);
-    }
 
     @Override
     public void SelectionOnMousePressedEventHandler(MouseEvent ev) {
@@ -387,8 +403,8 @@ public class sscText  implements sscShape {
         {
             origSceneX = ev.getSceneX();
             origSceneY = ev.getSceneY();
-            origTranslateX = textShape.getTranslateX();
-            origTranslateY = textShape.getTranslateY();
+            origTranslateX = shape.getTranslateX();
+            origTranslateY = shape.getTranslateY();
 
             wasDragged = false;
         }
@@ -404,10 +420,10 @@ public class sscText  implements sscShape {
         //double newWidth = origWidth + offsetX;
         //double newHeight = origHeight + offsetY;
         
-        textShape.setTranslateX(newTranslateX);
-        textSelection.setTranslateX(newTranslateX);
-        textShape.setTranslateY(newTranslateY);
-        textSelection.setTranslateY(newTranslateY);
+        shape.setTranslateX(newTranslateX);
+        selection.setTranslateX(newTranslateX);
+        shape.setTranslateY(newTranslateY);
+        selection.setTranslateY(newTranslateY);
         
         wasDragged = true;
     }
@@ -424,10 +440,10 @@ public class sscText  implements sscShape {
             {
                 isSelected = true;
 
-                maincontroller.getTextFieldText().setText(textShape.getText());
-                maincontroller.getComboBoxFontChooser().getSelectionModel().select(textShape.getFont().getFamily());
-                maincontroller.getComboBoxFontSize().setValue(String.valueOf(new Double(textShape.getFont().getSize()).intValue()));
-                maincontroller.getFillColorPicker().setValue((Color) textShape.getFill());
+                maincontroller.getTextFieldText().setText(shape.getText());
+                maincontroller.getComboBoxFontChooser().getSelectionModel().select(shape.getFont().getFamily());
+                maincontroller.getComboBoxFontSize().setValue(String.valueOf(new Double(shape.getFont().getSize()).intValue()));
+                maincontroller.getFillColorPicker().setValue((Color) shape.getFill());
             }
         }
     }
@@ -435,8 +451,8 @@ public class sscText  implements sscShape {
     @Override
     public void SelectionOnMouseOverEventHandler(MouseEvent ev) {
         
-        textSelection.setStroke(Color.CORNFLOWERBLUE);
-        textSelection.setStrokeWidth(2);
+        selection.setStroke(Color.CORNFLOWERBLUE);
+        selection.setStrokeWidth(2);
         
         isMouseOver = true;
     }
@@ -450,7 +466,7 @@ public class sscText  implements sscShape {
     public void SelectionOnMouseOutEventHandler(MouseEvent ev) {
         if(!isSelected)
         {
-            textSelection.setStrokeWidth(0);
+            selection.setStrokeWidth(0);
         }
         
         isMouseOver = false;
@@ -481,6 +497,35 @@ public class sscText  implements sscShape {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
    
+    /**
+     * Get the text bounds and aplies the text width and height to the selection area
+     */
+    private void updateSelectionSize()
+    {
+        Bounds text = shape.getBoundsInLocal();
+        
+        selection.setWidth(text.getWidth());
+        selection.setHeight(text.getHeight());
+        
+        //Repositioning selection area
+        selection.setY(text.getMinY());
+    }
     
+    @Override
+    public HashMap<String, Double> getShapeDimensions() 
+    {
+        HashMap<String, Double> mhm = new HashMap<>();
+        
+        mhm.put("x", shape.getBoundsInLocal().getMinX());
+        mhm.put("y", shape.getBoundsInLocal().getMinY());
+        mhm.put("translateX", shape.getTranslateX());
+        mhm.put("translateY", shape.getTranslateY());
+        
+        return mhm;
+    }
     
+    @Override
+    public void setShapeSelected(boolean selected) {
+        isSelected = selected;
+    }
 }
