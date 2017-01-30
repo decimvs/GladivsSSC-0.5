@@ -3,11 +3,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.gladivs</groupId>
-    <artifactId>GladivsSSC3</artifactId>
-    <version>0.1ALPHA</version>
+    <artifactId>GladivsIE</artifactId>
+    <version>0.1 - Alpha</version>
     <packaging>jar</packaging>
 
-    <name>GladivsSSC3</name>
+    <name>GladivsIE</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -112,4 +112,5 @@
             <version>2.0.2</version>
         </dependency>
     </dependencies>
+    <description>Gladivs is a simple and easy image editor. It has all the basic features you need.</description>
 </project>
